@@ -94,6 +94,51 @@
       white-space: nowrap;
     }
     .tile button:hover, .tile a:hover { background: #3a3020; }
+    /* PREVIEW BUTTON — distinct from the direct Download action. */
+    .tile .foot { flex-wrap: wrap; }
+    .tile .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .tile .preview-button { background: #342b1d; }
+
+    /* ================================================================
+       BUILT-IN 3D STEP VIEWER (modal)
+       Change dimensions/colors here; the viewer logic is further below.
+       ================================================================ */
+    .viewer-dialog {
+      position: fixed; inset: 0; z-index: 100;
+      width: min(1100px, calc(100vw - 24px));
+      height: min(850px, calc(100dvh - 24px));
+      max-width: none; max-height: none; margin: auto; padding: 0;
+      border: 1px solid #75613b; border-radius: 16px;
+      background: var(--panel); color: var(--text);
+      box-shadow: 0 20px 90px #000b;
+      overflow: hidden;
+    }
+    .viewer-dialog::backdrop { background: #000c; backdrop-filter: blur(6px); }
+    .viewer-layout { display: flex; flex-direction: column; height: 100%; }
+    .viewer-header { display: flex; align-items: center; gap: 14px; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid var(--line); }
+    .viewer-title { font: normal 21px Georgia, serif; overflow-wrap: anywhere; }
+    .viewer-kicker { font-size: 11px; text-transform: uppercase; letter-spacing: .15em; color: var(--gold); }
+    .viewer-close { flex: none; background: transparent; color: var(--text);
+      border: 1px solid var(--line); border-radius: 8px; font-size: 22px;
+      width: 38px; height: 38px; }
+    .viewer-canvas { position: relative; flex: 1; min-height: 170px; overflow: hidden;
+      background: radial-gradient(ellipse at center, #30424e 0%, #10171d 80%); }
+    .viewer-canvas canvas { display: block; width: 100%; height: 100%; }
+    .viewer-loading { position: absolute; inset: 0; display: grid; place-content: center;
+      text-align: center; padding: 30px; color: var(--text); background: #10171de6; z-index: 1; }
+    .viewer-loading[hidden] { display: none; }
+    .viewer-help { color: var(--muted); font-size: 13px; }
+    .viewer-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+      padding: 12px 20px; border-top: 1px solid var(--line); }
+    .viewer-toolbar button, .viewer-toolbar a { font: inherit; font-size: 13px;
+      border: 1px solid #695a40; border-radius: 8px; background: transparent;
+      color: var(--gold); padding: 9px 12px; text-decoration: none; cursor: pointer; }
+    .viewer-toolbar button:hover, .viewer-toolbar a:hover { background: #3a3020; }
+    .viewer-toolbar .viewer-download { margin-left: auto; background: #342b1d; }
+    @media(max-width:600px) { .viewer-header { padding: 12px; } .viewer-toolbar { padding: 10px 12px; }
+      .viewer-toolbar .viewer-download { margin-left: 0; } }
+
     .section { margin: 0 0 18px; color: var(--gold); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; }
     .empty { padding: 40px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); }
     .empty strong { color: var(--text); }
@@ -127,6 +172,31 @@
     <div id="status" class="status" role="status" aria-live="polite"></div>
   </main>
   <footer>✦ Rob's Repository · Crafted for the curious.</footer>
+
+  <!-- ================================================================
+       3D PREVIEW WINDOW — Used automatically for .step and .stp files.
+       This stays on the current page; visitors can still download files.
+       ================================================================ -->
+  <dialog id="viewer-dialog" class="viewer-dialog" aria-label="3D model preview">
+    <div class="viewer-layout">
+      <div class="viewer-header">
+        <div>
+          <div class="viewer-kicker">The model gallery · Interactive 3D preview</div>
+          <div class="viewer-title" id="viewer-title"></div>
+        </div>
+        <button type="button" id="viewer-close" class="viewer-close" aria-label="Close preview">×</button>
+      </div>
+      <div id="viewer-canvas" class="viewer-canvas">
+        <div id="viewer-loading" class="viewer-loading" role="status">Preparing 3D viewer…</div>
+      </div>
+      <div class="viewer-toolbar">
+        <span class="viewer-help">Drag: rotate · Scroll: zoom · Right drag: pan</span>
+        <button type="button" id="viewer-fit">↔ Fit model</button>
+        <button type="button" id="viewer-edges" aria-pressed="true">Edges: On</button>
+        <a id="viewer-download" class="viewer-download" href="#" download>Download file ↓</a>
+      </div>
+    </div>
+  </dialog>
 
   <script>
     /* =====================================================================
@@ -332,7 +402,20 @@
         action.download = item.name; // Forces save instead of a GitHub viewer page.
       }
 
-      foot.append(metadata, action);
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+      // Automatically add Preview 3D to all STEP/STP files found on GitHub.
+      // Other file types keep their normal Download button only.
+      if (item.type === 'file' && /\.(step|stp)$/i.test(item.name)) {
+        const preview = document.createElement('button');
+        preview.type = 'button';
+        preview.className = 'preview-button';
+        preview.textContent = 'Preview 3D';
+        preview.addEventListener('click', () => openStepPreview(item));
+        actions.append(preview);
+      }
+      actions.append(action);
+      foot.append(metadata, actions);
       article.append(symbol, heading, details, foot);
       return article;
     }
@@ -404,6 +487,280 @@
         refreshButton.textContent = '↻ Refresh files';
       }
     }
+
+    /* =====================================================================
+       3D STEP / STP PREVIEW — NO SERVER OR MANUAL MODEL CONVERSION REQUIRED
+
+       When someone clicks "Preview 3D", two libraries load ON DEMAND:
+         - three.js: the WebGL display and mouse controls.
+         - occt-import-js: OpenCascade STEP CAD reader, compiled to WebAssembly.
+
+       Both load from a CDN; your GitHub Pages site stays a single HTML file.
+       The .step/.stp file is fetched from YOUR GitHub Pages URL, not GitHub's
+       /blob/ viewer, then converted to displayable triangles in the browser.
+
+       You normally need to edit nothing in this section. To change library
+       versions, update the pinned CDN URLs below and test the viewer.
+       ===================================================================== */
+    const VIEWER_CDN = {
+      three: 'https://cdn.jsdelivr.net/npm/three@0.138.3/build/three.min.js',
+      controls: 'https://cdn.jsdelivr.net/npm/three@0.138.3/examples/js/controls/OrbitControls.js',
+      occt: 'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js',
+      occtWasmDir: 'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/'
+    };
+
+    const viewerDialog = document.getElementById('viewer-dialog');
+    const viewerTitle = document.getElementById('viewer-title');
+    const viewerCanvas = document.getElementById('viewer-canvas');
+    const viewerLoading = document.getElementById('viewer-loading');
+    const viewerDownload = document.getElementById('viewer-download');
+    const viewerFitButton = document.getElementById('viewer-fit');
+    const viewerEdgesButton = document.getElementById('viewer-edges');
+
+    let viewerLibrariesPromise = null;
+    let cadEnginePromise = null;
+    let activeViewer = null;
+    let previewGeneration = 0; // Prevent closed/stale previews from rendering.
+
+    function loadExternalScript(src) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error('Failed to load a 3D viewer library. Check your connection.'));
+        document.head.append(script);
+      });
+    }
+
+    function getViewerLibraries() {
+      if (!viewerLibrariesPromise) {
+        viewerLibrariesPromise = Promise.all([
+          loadExternalScript(VIEWER_CDN.three).then(() => loadExternalScript(VIEWER_CDN.controls)),
+          loadExternalScript(VIEWER_CDN.occt)
+        ]).then(() => {
+          if (!window.THREE || !window.THREE.OrbitControls || !window.occtimportjs) {
+            throw new Error('The 3D viewer could not initialize.');
+          }
+        }).catch(error => {
+          viewerLibrariesPromise = null; // Allow retry if the CDN temporarily fails.
+          throw error;
+        });
+      }
+      return viewerLibrariesPromise;
+    }
+
+    async function getCadEngine() {
+      await getViewerLibraries();
+      if (!cadEnginePromise) {
+        cadEnginePromise = window.occtimportjs({
+          locateFile: filename => VIEWER_CDN.occtWasmDir + filename
+        }).catch(error => {
+          cadEnginePromise = null; // Allow retry after a failed WASM download.
+          throw error;
+        });
+      }
+      return cadEnginePromise;
+    }
+
+    function setPreviewMessage(message) {
+      viewerLoading.textContent = message;
+      viewerLoading.hidden = false;
+    }
+
+    /* Release GPU resources and listeners when the viewer is closed. */
+    function destroyViewer() {
+      if (!activeViewer) return;
+      const { controls, renderer, frame, resizeObserver, models, scene } = activeViewer;
+      cancelAnimationFrame(frame.id);
+      resizeObserver.disconnect();
+      controls.dispose();
+      models.traverse(object => {
+        if (object.geometry) object.geometry.dispose();
+        if (object.material) {
+          (Array.isArray(object.material) ? object.material : [object.material]).forEach(m => m.dispose());
+        }
+      });
+      renderer.dispose();
+      renderer.domElement.remove();
+      scene.clear();
+      activeViewer = null;
+    }
+
+    function closePreview() {
+      ++previewGeneration;
+      if (viewerDialog.open) viewerDialog.close();
+      destroyViewer();
+    }
+
+    /* Convert the STEP parser's triangulated CAD surfaces into a 3D scene. */
+    function buildStepScene(result, THREE) {
+      const models = new THREE.Group();
+      const edgeGroups = [];
+      for (const part of result.meshes || []) {
+        const positions = part.attributes?.position?.array;
+        const triangles = part.index?.array;
+        if (!positions || !triangles || !triangles.length) continue;
+
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        geometry.setIndex(triangles);
+        if (part.attributes.normal?.array) {
+          geometry.setAttribute('normal', new THREE.Float32BufferAttribute(part.attributes.normal.array, 3));
+        } else {
+          geometry.computeVertexNormals();
+        }
+
+        const baseColor = part.color
+          ? new THREE.Color(part.color[0], part.color[1], part.color[2])
+          : new THREE.Color(0xd5b476);
+        const materials = [new THREE.MeshPhongMaterial({ color: baseColor, side: THREE.DoubleSide, shininess: 48 })];
+
+        // Preserve face colors on CAD files that include them.
+        const faces = part.brep_faces || [];
+        if (faces.length) {
+          for (const face of faces) {
+            const color = face.color
+              ? new THREE.Color(face.color[0], face.color[1], face.color[2]) : baseColor;
+            materials.push(new THREE.MeshPhongMaterial({ color, side: THREE.DoubleSide, shininess: 48 }));
+          }
+          const total = triangles.length / 3;
+          let index = 0;
+          for (let f = 0; index < total;) {
+            let end, materialIndex;
+            if (f >= faces.length) { end = total; materialIndex = 0; }
+            else if (index < faces[f].first) { end = faces[f].first; materialIndex = 0; }
+            else { end = faces[f].last + 1; materialIndex = f + 1; f++; }
+            if (end <= index) break;
+            geometry.addGroup(index * 3, (end - index) * 3, materialIndex);
+            index = end;
+          }
+        }
+
+        models.add(new THREE.Mesh(geometry, faces.length ? materials : materials[0]));
+
+        // Dark edge outlines help the STEP shape read like a technical model.
+        const edgesGeometry = new THREE.EdgesGeometry(geometry, 35);
+        const edges = new THREE.LineSegments(
+          edgesGeometry,
+          new THREE.LineBasicMaterial({ color: 0x1b2933, transparent: true, opacity: 0.75 })
+        );
+        edgeGroups.push(edges);
+        models.add(edges);
+      }
+      return { models, edgeGroups };
+    }
+
+    function displayStepModel(result) {
+      const THREE = window.THREE;
+      const scene = new THREE.Scene();
+      const { models, edgeGroups } = buildStepScene(result, THREE);
+      if (!models.children.length) throw new Error('The STEP file did not contain displayable geometry.');
+      scene.add(models);
+
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x53616b, 1.4));
+      const light = new THREE.DirectionalLight(0xffffff, 1.2);
+      light.position.set(80, -110, 140);
+      scene.add(light);
+      const fill = new THREE.DirectionalLight(0xffffff, 0.45);
+      fill.position.set(-100, 50, -35);
+      scene.add(fill);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      viewerCanvas.append(renderer.domElement);
+      const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 100000);
+      camera.up.set(0, 0, 1); // CAD uses the Z axis as vertical.
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.screenSpacePanning = true;
+
+      const bounds = new THREE.Box3().setFromObject(models);
+      const center = bounds.getCenter(new THREE.Vector3());
+      const size = bounds.getSize(new THREE.Vector3());
+      const longest = Math.max(size.x, size.y, size.z, 0.001);
+      function fitModel() {
+        const distance = longest / (2 * Math.tan((42 * Math.PI / 180) / 2)) * 1.55;
+        camera.near = Math.max(distance / 10000, 0.001);
+        camera.far = Math.max(distance * 100, 10);
+        camera.position.copy(center).add(new THREE.Vector3(distance * 0.75, -distance, distance * 0.72));
+        camera.updateProjectionMatrix();
+        controls.target.copy(center);
+        controls.update();
+      }
+      function resize() {
+        const width = viewerCanvas.clientWidth;
+        const height = viewerCanvas.clientHeight;
+        if (!width || !height) return;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+      }
+      const resizeObserver = new ResizeObserver(resize);
+      resizeObserver.observe(viewerCanvas);
+      fitModel();
+      resize();
+
+      const frame = { id: 0 };
+      function renderFrame() {
+        controls.update();
+        renderer.render(scene, camera);
+        frame.id = requestAnimationFrame(renderFrame);
+      }
+      renderFrame();
+      activeViewer = { scene, models, renderer, camera, controls, edgeGroups, frame, resizeObserver, fitModel, edgesVisible: true };
+      viewerEdgesButton.textContent = 'Edges: On';
+      viewerEdgesButton.setAttribute('aria-pressed', 'true');
+    }
+
+    async function openStepPreview(item) {
+      closePreview();
+      const myGeneration = previewGeneration;
+      viewerTitle.textContent = item.name;
+      viewerDownload.href = downloadUrl(item.path);
+      viewerDownload.download = item.name;
+      setPreviewMessage('Loading 3D viewer… (first time may take a moment)');
+      viewerDialog.showModal();
+      try {
+        const occt = await getCadEngine();
+        if (myGeneration !== previewGeneration) return;
+        setPreviewMessage('Downloading CAD model…');
+        const response = await fetch(downloadUrl(item.path));
+        if (!response.ok) throw new Error(`Could not fetch the file (HTTP ${response.status}).`);
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        if (myGeneration !== previewGeneration) return;
+        setPreviewMessage('Processing STEP geometry…');
+        // CAD conversion runs locally in the visitor's browser.
+        await new Promise(resolve => setTimeout(resolve, 30)); // Paint the status first.
+        const result = occt.ReadStepFile(bytes, null);
+        if (myGeneration !== previewGeneration) return;
+        if (!result?.success) throw new Error('The CAD parser could not read this STEP file.');
+        displayStepModel(result);
+        viewerLoading.hidden = true;
+      } catch (error) {
+        if (myGeneration === previewGeneration) {
+          setPreviewMessage(`Preview unavailable: ${error.message}  You can still download the file below.`);
+        }
+      }
+    }
+
+    document.getElementById('viewer-close').addEventListener('click', closePreview);
+    viewerDialog.addEventListener('cancel', event => {
+      event.preventDefault();
+      closePreview();
+    });
+    viewerDialog.addEventListener('click', event => {
+      if (event.target === viewerDialog) closePreview();
+    });
+    viewerFitButton.addEventListener('click', () => activeViewer?.fitModel());
+    viewerEdgesButton.addEventListener('click', () => {
+      if (!activeViewer) return;
+      activeViewer.edgesVisible = !activeViewer.edgesVisible;
+      activeViewer.edgeGroups.forEach(edges => { edges.visible = activeViewer.edgesVisible; });
+      viewerEdgesButton.textContent = `Edges: ${activeViewer.edgesVisible ? 'On' : 'Off'}`;
+      viewerEdgesButton.setAttribute('aria-pressed', String(activeViewer.edgesVisible));
+    });
 
     search.addEventListener('input', draw);
     refreshButton.addEventListener('click', loadRepository);
