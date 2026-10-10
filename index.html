@@ -283,7 +283,8 @@
             type: 'file',
             name: parts[parts.length - 1],
             path: entry.path,
-            size: entry.size ?? null
+            size: entry.size ?? null,
+            sha: entry.sha // Git object ID: fetch the exact file without relying on Pages paths.
           });
         }
       }
@@ -299,10 +300,89 @@
       return top;
     }
 
-    /* Same-origin URL: browser's download attribute works for STEP, STL,
-       3MF, ZIP, etc. Handles spaces, plus signs and other filename characters. */
-    function downloadUrl(repoPath) {
+    /* =====================================================================
+       FILE DOWNLOADS & STEP PREVIEWS — THE SAME RELIABLE SOURCE
+
+       Why: GitHub Pages may return HTTP 404 for a model even though the file
+       exists in the GitHub repository. This was breaking STEP previews.
+
+       We already receive each file's Git SHA from the Git Trees API. GitHub's
+       Get-a-Blob endpoint fetches that exact file by SHA, so paths with spaces,
+       plus signs, etc. don't need to be reconstructed for preview/download.
+       No GitHub login or API token is needed for a public repository.
+
+       GitHub's blob endpoint supports files up to 100 MB. Larger files use
+       the direct Pages URL (see pagesFileUrl below).
+       ===================================================================== */
+    const GITHUB_BLOB_MAX_BYTES = 100 * 1024 * 1024;
+
+    function pagesFileUrl(repoPath) {
       return new URL(repoPath.split('/').map(encodeURIComponent).join('/'), document.baseURI).href;
+    }
+
+    async function fetchGitHubFile(item) {
+      if (!item.sha) throw new Error('GitHub did not provide a file ID. Refresh the repository.');
+      if (item.size > GITHUB_BLOB_MAX_BYTES) {
+        throw new Error('This file is larger than the 100 MB GitHub API limit.');
+      }
+      const url = `https://api.github.com/repos/${encodeURIComponent(CONFIG.owner)}/${encodeURIComponent(CONFIG.repo)}/git/blobs/${encodeURIComponent(item.sha)}`;
+      const response = await fetch(url, {
+        headers: { Accept: 'application/vnd.github+json' }
+      });
+      if (!response.ok) {
+        if (response.status === 403 || response.status === 429) {
+          throw new Error('GitHub API rate limit reached. Try again later.');
+        }
+        throw new Error(`GitHub file request failed (HTTP ${response.status}).`);
+      }
+      const data = await response.json();
+      if (data.encoding !== 'base64' || typeof data.content !== 'string') {
+        throw new Error('GitHub returned an unsupported file format.');
+      }
+      // Decode in chunks; atob() expects base64 lengths divisible by four.
+      const encoded = data.content.replace(/\s/g, '');
+      const output = new Uint8Array(data.size);
+      let offset = 0;
+      for (let i = 0; i < encoded.length; i += 32768) {
+        const chunk = atob(encoded.slice(i, i + 32768));
+        for (let j = 0; j < chunk.length; j++) output[offset++] = chunk.charCodeAt(j);
+      }
+      if (offset !== output.length) throw new Error('Downloaded file size did not match GitHub metadata.');
+      return output;
+    }
+
+    function saveFile(bytes, filename) {
+      const objectUrl = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = filename;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      // Allow the browser time to begin downloading before freeing the URL.
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+    }
+
+    async function downloadFile(item, button) {
+      if (item.size > GITHUB_BLOB_MAX_BYTES) {
+        // API can't serve blobs >100 MB; use the site-hosted original instead.
+        window.location.href = pagesFileUrl(item.path);
+        return;
+      }
+      const originalText = button.textContent;
+      button.textContent = 'Preparing…';
+      button.setAttribute('aria-busy', 'true');
+      try {
+        const bytes = await fetchGitHubFile(item);
+        saveFile(bytes, item.name);
+      } catch (error) {
+        // Keep errors visible: a failed fetch must not silently serve a 404 page.
+        status.textContent = `Download unavailable: ${error.message}`;
+        alert(`Could not download ${item.name}: ${error.message}`);
+      } finally {
+        button.textContent = originalText;
+        button.removeAttribute('aria-busy');
+      }
     }
 
     function fileSize(bytes) {
@@ -398,8 +478,14 @@
       } else {
         action = document.createElement('a');
         action.textContent = 'Download ↓';
-        action.href = downloadUrl(item.path);
-        action.download = item.name; // Forces save instead of a GitHub viewer page.
+        // Use GitHub's blob API to download the actual file, not a /blob/ web page.
+        // href remains as a conventional fallback for visitors without JavaScript.
+        action.href = pagesFileUrl(item.path);
+        action.download = item.name;
+        action.addEventListener('click', event => {
+          event.preventDefault();
+          downloadFile(item, action);
+        });
       }
 
       const actions = document.createElement('div');
@@ -496,8 +582,9 @@
          - occt-import-js: OpenCascade STEP CAD reader, compiled to WebAssembly.
 
        Both load from a CDN; your GitHub Pages site stays a single HTML file.
-       The .step/.stp file is fetched from YOUR GitHub Pages URL, not GitHub's
-       /blob/ viewer, then converted to displayable triangles in the browser.
+       The .step/.stp file is fetched from GitHub's file-content API using
+       its SHA, then converted to displayable triangles in the browser.
+       This avoids broken GitHub Pages file URLs (HTTP 404).
 
        You normally need to edit nothing in this section. To change library
        versions, update the pinned CDN URLs below and test the viewer.
@@ -718,17 +805,21 @@
       closePreview();
       const myGeneration = previewGeneration;
       viewerTitle.textContent = item.name;
-      viewerDownload.href = downloadUrl(item.path);
+      viewerDownload.href = pagesFileUrl(item.path);
       viewerDownload.download = item.name;
+      // Keep downloads separate from the 3D parser; use the exact same GitHub
+      // blob that powers preview so unusual filenames don't cause HTTP 404.
+      viewerDownload.onclick = event => {
+        event.preventDefault();
+        downloadFile(item, viewerDownload);
+      };
       setPreviewMessage('Loading 3D viewer… (first time may take a moment)');
       viewerDialog.showModal();
       try {
         const occt = await getCadEngine();
         if (myGeneration !== previewGeneration) return;
         setPreviewMessage('Downloading CAD model…');
-        const response = await fetch(downloadUrl(item.path));
-        if (!response.ok) throw new Error(`Could not fetch the file (HTTP ${response.status}).`);
-        const bytes = new Uint8Array(await response.arrayBuffer());
+        const bytes = await fetchGitHubFile(item);
         if (myGeneration !== previewGeneration) return;
         setPreviewMessage('Processing STEP geometry…');
         // CAD conversion runs locally in the visitor's browser.
