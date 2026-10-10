@@ -100,7 +100,7 @@
     .tile .preview-button { background: #342b1d; }
 
     /* ================================================================
-       BUILT-IN 3D STEP VIEWER (modal)
+       BUILT-IN 3D MODEL VIEWER (STEP / STL / 3MF modal)
        Change dimensions/colors here; the viewer logic is further below.
        ================================================================ */
     .viewer-dialog {
@@ -174,7 +174,7 @@
   <footer>✦ Rob's Repository · Crafted for the curious.</footer>
 
   <!-- ================================================================
-       3D PREVIEW WINDOW — Used automatically for .step and .stp files.
+       3D PREVIEW WINDOW — Used for .step, .stp, .stl, and .3mf files.
        This stays on the current page; visitors can still download files.
        ================================================================ -->
   <dialog id="viewer-dialog" class="viewer-dialog" aria-label="3D model preview">
@@ -213,8 +213,8 @@
        1. Read the entire main branch folder tree from GitHub's public API.
        2. Show each root folder as a category (e.g. "3D Print Stuff").
        3. Clicking a folder reveals its subfolders and downloadable files.
-       4. Link to the SAME GitHub Pages domain for direct file downloads,
-          instead of GitHub's /blob/ source-code viewer.
+       4. Download actual repository files through GitHub's Git Blobs API
+          by SHA, instead of GitHub's /blob/ source-code viewer.
 
        YOU GENERALLY DON'T NEED TO EDIT ANYTHING BELOW.
        ===================================================================== */
@@ -301,10 +301,10 @@
     }
 
     /* =====================================================================
-       FILE DOWNLOADS & STEP PREVIEWS — THE SAME RELIABLE SOURCE
+       FILE DOWNLOADS & 3D PREVIEWS — THE SAME RELIABLE SOURCE
 
        Why: GitHub Pages may return HTTP 404 for a model even though the file
-       exists in the GitHub repository. This was breaking STEP previews.
+       exists in GitHub. This previously broke model previews.
 
        We already receive each file's Git SHA from the Git Trees API. GitHub's
        Get-a-Blob endpoint fetches that exact file by SHA, so paths with spaces,
@@ -490,14 +490,14 @@
 
       const actions = document.createElement('div');
       actions.className = 'actions';
-      // Automatically add Preview 3D to all STEP/STP files found on GitHub.
-      // Other file types keep their normal Download button only.
-      if (item.type === 'file' && /\.(step|stp)$/i.test(item.name)) {
+      // STEP, STL, and 3MF files automatically get a preview button.
+      // Any future files with these extensions work without editing HTML.
+      if (item.type === 'file' && isPreviewable3D(item.name)) {
         const preview = document.createElement('button');
         preview.type = 'button';
         preview.className = 'preview-button';
         preview.textContent = 'Preview 3D';
-        preview.addEventListener('click', () => openStepPreview(item));
+        preview.addEventListener('click', () => openModelPreview(item));
         actions.append(preview);
       }
       actions.append(action);
@@ -557,7 +557,7 @@
         root = buildFolderTree(result.tree);
         loaded = true;
         draw();
-        status.textContent = 'Synced with GitHub · Upload new files to your repository, then click Refresh files.';
+        
       } catch (error) {
         if (!loaded) {
           breadcrumbs.replaceChildren();
@@ -575,23 +575,29 @@
     }
 
     /* =====================================================================
-       3D STEP / STP PREVIEW — NO SERVER OR MANUAL MODEL CONVERSION REQUIRED
+       3D MODEL PREVIEWS — STEP/STP, STL, AND 3MF
 
-       When someone clicks "Preview 3D", two libraries load ON DEMAND:
-         - three.js: the WebGL display and mouse controls.
-         - occt-import-js: OpenCascade STEP CAD reader, compiled to WebAssembly.
+       All files come from GitHub's Git Blobs API by SHA (same as downloads).
+       A single viewer supports these extensions automatically:
+         .step / .stp — OpenCascade / occt-import-js (real CAD surfaces)
+         .stl         — Three.js STLLoader (binary and ASCII STL)
+         .3mf         — Three.js 3MFLoader and fflate (ZIP-based 3MF models)
 
-       Both load from a CDN; your GitHub Pages site stays a single HTML file.
-       The .step/.stp file is fetched from GitHub's file-content API using
-       its SHA, then converted to displayable triangles in the browser.
-       This avoids broken GitHub Pages file URLs (HTTP 404).
+       Libraries load ON DEMAND when needed; each loader is pinned to the same
+       Three.js version. Change the CDN constants below if updating versions.
+       The page is still one index.html on GitHub Pages, with no build step.
 
-       You normally need to edit nothing in this section. To change library
-       versions, update the pinned CDN URLs below and test the viewer.
+       Notes: A 3MF preview shows model geometry and supported materials; it is
+       not a slicer. Printer settings, toolpaths, supports, and build plates in
+       slicer-specific 3MF extensions may not be shown.
        ===================================================================== */
     const VIEWER_CDN = {
       three: 'https://cdn.jsdelivr.net/npm/three@0.138.3/build/three.min.js',
       controls: 'https://cdn.jsdelivr.net/npm/three@0.138.3/examples/js/controls/OrbitControls.js',
+      stl: 'https://cdn.jsdelivr.net/npm/three@0.138.3/examples/js/loaders/STLLoader.js',
+      threeMF: 'https://cdn.jsdelivr.net/npm/three@0.138.3/examples/js/loaders/3MFLoader.js',
+      // The legacy 3MF loader accesses window.fflate for ZIP decompression.
+      fflate: 'https://cdn.jsdelivr.net/npm/fflate@0.8.3/umd/index.js',
       occt: 'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js',
       occtWasmDir: 'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/'
     };
@@ -604,48 +610,92 @@
     const viewerFitButton = document.getElementById('viewer-fit');
     const viewerEdgesButton = document.getElementById('viewer-edges');
 
+    // Shared renderer/controls; loaders are cached independently, by format.
     let viewerLibrariesPromise = null;
+    let stlLoaderPromise = null;
+    let threeMFLoaderPromise = null;
     let cadEnginePromise = null;
     let activeViewer = null;
-    let previewGeneration = 0; // Prevent closed/stale previews from rendering.
+    let previewGeneration = 0; // Ignore results after the preview has closed.
+    const scriptLoads = new Map();
+
+    function isPreviewable3D(name) {
+      return /\.(step|stp|stl|3mf)$/i.test(name);
+    }
 
     function loadExternalScript(src) {
-      return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.async = true;
-        script.onload = resolve;
-        script.onerror = () => reject(new Error('Failed to load a 3D viewer library. Check your connection.'));
-        document.head.append(script);
-      });
+      // Loading the same script twice can overwrite a Three.js plugin.
+      if (!scriptLoads.has(src)) {
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.async = true;
+          script.onload = resolve;
+          script.onerror = () => reject(new Error('Failed to load a 3D viewer library. Check your connection.'));
+          document.head.append(script);
+        }).catch(error => {
+          scriptLoads.delete(src); // Allow a retry if the CDN was unavailable.
+          throw error;
+        });
+        scriptLoads.set(src, promise);
+      }
+      return scriptLoads.get(src);
     }
 
     function getViewerLibraries() {
       if (!viewerLibrariesPromise) {
-        viewerLibrariesPromise = Promise.all([
-          loadExternalScript(VIEWER_CDN.three).then(() => loadExternalScript(VIEWER_CDN.controls)),
-          loadExternalScript(VIEWER_CDN.occt)
-        ]).then(() => {
-          if (!window.THREE || !window.THREE.OrbitControls || !window.occtimportjs) {
-            throw new Error('The 3D viewer could not initialize.');
-          }
-        }).catch(error => {
-          viewerLibrariesPromise = null; // Allow retry if the CDN temporarily fails.
-          throw error;
-        });
+        viewerLibrariesPromise = loadExternalScript(VIEWER_CDN.three)
+          .then(() => loadExternalScript(VIEWER_CDN.controls))
+          .then(() => {
+            if (!window.THREE || !window.THREE.OrbitControls) {
+              throw new Error('Three.js could not initialize the model viewer.');
+            }
+          }).catch(error => {
+            viewerLibrariesPromise = null;
+            throw error;
+          });
       }
       return viewerLibrariesPromise;
+    }
+
+    async function getStlLoader() {
+      await getViewerLibraries();
+      if (!stlLoaderPromise) {
+        stlLoaderPromise = loadExternalScript(VIEWER_CDN.stl).then(() => {
+          if (!window.THREE.STLLoader) throw new Error('STL loader did not initialize.');
+          return window.THREE.STLLoader;
+        }).catch(error => { stlLoaderPromise = null; throw error; });
+      }
+      return stlLoaderPromise;
+    }
+
+    async function getThreeMFLoader() {
+      await getViewerLibraries();
+      if (!threeMFLoaderPromise) {
+        // This revision of Three.js requires the global fflate ZIP helper.
+        // Load it BEFORE the 3MF loader; do not load both in parallel.
+        threeMFLoaderPromise = loadExternalScript(VIEWER_CDN.fflate)
+          .then(() => loadExternalScript(VIEWER_CDN.threeMF))
+          .then(() => {
+            if (!window.fflate || !window.THREE.ThreeMFLoader) {
+              throw new Error('3MF loader did not initialize.');
+            }
+            return window.THREE.ThreeMFLoader;
+          }).catch(error => { threeMFLoaderPromise = null; throw error; });
+      }
+      return threeMFLoaderPromise;
     }
 
     async function getCadEngine() {
       await getViewerLibraries();
       if (!cadEnginePromise) {
-        cadEnginePromise = window.occtimportjs({
-          locateFile: filename => VIEWER_CDN.occtWasmDir + filename
-        }).catch(error => {
-          cadEnginePromise = null; // Allow retry after a failed WASM download.
-          throw error;
-        });
+        cadEnginePromise = loadExternalScript(VIEWER_CDN.occt)
+          .then(() => {
+            if (!window.occtimportjs) throw new Error('STEP CAD loader did not initialize.');
+            return window.occtimportjs({
+              locateFile: filename => VIEWER_CDN.occtWasmDir + filename
+            });
+          }).catch(error => { cadEnginePromise = null; throw error; });
       }
       return cadEnginePromise;
     }
@@ -662,10 +712,21 @@
       cancelAnimationFrame(frame.id);
       resizeObserver.disconnect();
       controls.dispose();
+      const releasedGeometry = new Set();
+      const releasedMaterial = new Set();
       models.traverse(object => {
-        if (object.geometry) object.geometry.dispose();
+        if (object.geometry && !releasedGeometry.has(object.geometry)) {
+          object.geometry.dispose();
+          releasedGeometry.add(object.geometry);
+        }
         if (object.material) {
-          (Array.isArray(object.material) ? object.material : [object.material]).forEach(m => m.dispose());
+          (Array.isArray(object.material) ? object.material : [object.material]).forEach(material => {
+            if (releasedMaterial.has(material)) return;
+            // 3MF models may use textures, unlike most STEP/STL previews.
+            if (material.map) material.map.dispose();
+            material.dispose();
+            releasedMaterial.add(material);
+          });
         }
       });
       renderer.dispose();
@@ -738,11 +799,11 @@
       return { models, edgeGroups };
     }
 
-    function displayStepModel(result) {
+    /* Shared WebGL renderer for all three formats, with Fit and Edges tools. */
+    function displayModel(models, edgeGroups) {
       const THREE = window.THREE;
       const scene = new THREE.Scene();
-      const { models, edgeGroups } = buildStepScene(result, THREE);
-      if (!models.children.length) throw new Error('The STEP file did not contain displayable geometry.');
+      if (!models.children.length) throw new Error('No displayable model geometry was found.');
       scene.add(models);
 
       scene.add(new THREE.HemisphereLight(0xffffff, 0x53616b, 1.4));
@@ -801,14 +862,91 @@
       viewerEdgesButton.setAttribute('aria-pressed', 'true');
     }
 
-    async function openStepPreview(item) {
+    /* STEP files: OCCT triangulates the CAD surfaces for Three.js. */
+    async function readStepModel(bytes) {
+      const occt = await getCadEngine();
+      setPreviewMessage('Processing STEP geometry…');
+      // Give the browser a chance to draw the status before blocking on CAD.
+      await new Promise(resolve => setTimeout(resolve, 30));
+      const result = occt.ReadStepFile(bytes, null);
+      if (!result?.success) throw new Error('The CAD parser could not read this STEP file.');
+      return buildStepScene(result, window.THREE);
+    }
+
+    /* STL files: mesh-only; works for both ASCII STL and binary STL. */
+    async function readStlModel(bytes) {
+      const Loader = await getStlLoader();
+      setPreviewMessage('Processing STL mesh…');
+      const THREE = window.THREE;
+      // STLLoader.parse needs an ArrayBuffer, not a Uint8Array view.
+      const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+      const geometry = new Loader().parse(buffer);
+      if (!geometry.attributes.position?.count) {
+        geometry.dispose();
+        throw new Error('This STL file has no displayable triangles.');
+      }
+      if (!geometry.attributes.normal) geometry.computeVertexNormals();
+      const material = new THREE.MeshPhongMaterial({
+        color: geometry.hasColors ? 0xffffff : 0xd5b476,
+        vertexColors: Boolean(geometry.hasColors),
+        transparent: Boolean(geometry.hasColors && geometry.alpha < 1),
+        opacity: geometry.hasColors ? geometry.alpha : 1,
+        side: THREE.DoubleSide,
+        shininess: 48
+      });
+      const models = new THREE.Group();
+      const mesh = new THREE.Mesh(geometry, material);
+      models.add(mesh);
+      return { models, edgeGroups: createMeshEdges(models, THREE) };
+    }
+
+    /*
+       3MF files: the file is a ZIP archive, so ThreeMFLoader needs fflate.
+       Unlike STL, a 3MF may contain multiple positioned meshes and materials.
+       Slicer-specific settings (supports, print profiles, toolpaths) aren't
+       necessarily renderable and are intentionally not interpreted here.
+    */
+    async function readThreeMFModel(bytes) {
+      const Loader = await getThreeMFLoader();
+      setPreviewMessage('Processing 3MF model…');
+      const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+      const models = new Loader().parse(buffer);
+      if (!models || !models.isObject3D) throw new Error('The 3MF loader could not read this model.');
+      let hasTriangles = false;
+      models.traverse(object => {
+        if (object.isMesh && object.geometry?.attributes?.position?.count) hasTriangles = true;
+      });
+      if (!hasTriangles) throw new Error('This 3MF has no displayable mesh geometry.');
+      return { models, edgeGroups: createMeshEdges(models, window.THREE) };
+    }
+
+    /* Edge overlay for mesh formats; the button can hide/show all outlines. */
+    function createMeshEdges(models, THREE) {
+      const outlines = [];
+      const meshes = [];
+      models.traverse(object => {
+        if (object.isMesh && object.geometry?.attributes?.position?.count) meshes.push(object);
+      });
+      for (const mesh of meshes) {
+        const edges = new THREE.LineSegments(
+          new THREE.EdgesGeometry(mesh.geometry, 35),
+          new THREE.LineBasicMaterial({ color: 0x1b2933, opacity: 0.75, transparent: true })
+        );
+        // A child overlay follows each mesh's translation, rotation and scale.
+        mesh.add(edges);
+        outlines.push(edges);
+      }
+      return outlines;
+    }
+
+    /* Dispatch automatically by file extension; the UI doesn't need edits. */
+    async function openModelPreview(item) {
       closePreview();
       const myGeneration = previewGeneration;
+      const extension = item.name.split('.').pop().toLowerCase();
       viewerTitle.textContent = item.name;
       viewerDownload.href = pagesFileUrl(item.path);
       viewerDownload.download = item.name;
-      // Keep downloads separate from the 3D parser; use the exact same GitHub
-      // blob that powers preview so unusual filenames don't cause HTTP 404.
       viewerDownload.onclick = event => {
         event.preventDefault();
         downloadFile(item, viewerDownload);
@@ -816,22 +954,30 @@
       setPreviewMessage('Loading 3D viewer… (first time may take a moment)');
       viewerDialog.showModal();
       try {
-        const occt = await getCadEngine();
+        await getViewerLibraries();
         if (myGeneration !== previewGeneration) return;
-        setPreviewMessage('Downloading CAD model…');
-        const bytes = await fetchGitHubFile(item);
+
+        // Request by SHA, not path, to support spaces and '+' in filenames.
+        // Begin the format-specific library load while downloading the file.
+        const loaderPromise = extension === 'stl' ? getStlLoader()
+          : extension === '3mf' ? getThreeMFLoader() : getCadEngine();
+        setPreviewMessage('Downloading model from GitHub…');
+        const [bytes] = await Promise.all([fetchGitHubFile(item), loaderPromise]);
         if (myGeneration !== previewGeneration) return;
-        setPreviewMessage('Processing STEP geometry…');
-        // CAD conversion runs locally in the visitor's browser.
-        await new Promise(resolve => setTimeout(resolve, 30)); // Paint the status first.
-        const result = occt.ReadStepFile(bytes, null);
-        if (myGeneration !== previewGeneration) return;
-        if (!result?.success) throw new Error('The CAD parser could not read this STEP file.');
-        displayStepModel(result);
+
+        const parsed = extension === 'stl' ? await readStlModel(bytes)
+          : extension === '3mf' ? await readThreeMFModel(bytes)
+          : await readStepModel(bytes);
+        if (myGeneration !== previewGeneration) {
+          // If closing during parsing, avoid mounting a stale scene.
+          parsed.models.traverse(obj => { if (obj.geometry) obj.geometry.dispose(); });
+          return;
+        }
+        displayModel(parsed.models, parsed.edgeGroups);
         viewerLoading.hidden = true;
       } catch (error) {
         if (myGeneration === previewGeneration) {
-          setPreviewMessage(`Preview unavailable: ${error.message}  You can still download the file below.`);
+          setPreviewMessage(`Preview unavailable: ${error.message} You can still download the file below.`);
         }
       }
     }
