@@ -238,69 +238,102 @@
 	<footer>✦ Rob's Repository · Crafted for the curious.</footer>
 	<script>
 	/* =====================================================================
-	           ROB'S REPOSITORY — EASY EDITING GUIDE
-	           1. Add your actual files to a /files folder in your GitHub repository.
-	           2. Edit ONLY the REPOSITORY array below to add folders and downloads.
-	           3. A folder uses: {type:'folder', name:'...', children:[ ... ]}
-	           4. A file uses: {type:'file', name:'...', url:'files/example.stl'}
-	           5. Folders can contain unlimited subfolders. Keep names descriptive.
-	           6. To change colors, edit the variables in :root near the top.
-	           7. To change page wording, edit the header, h1 and intro above.
-	           NOTE: GitHub Pages is public. Do not upload private files.
-	           ===================================================================== */
+
+	             ROB'S REPOSITORY — EASY EDITING GUIDE
+
+	             1. Add actual files to a /files folder in GitHub repository.
+
+	             2. Edit ONLY the REPOSITORY array below to add folders and downloads.
+
+	             3. A folder uses: {type:'folder', name:'...', children:[ ... ]}
+
+	             4. A file uses: {type:'file', name:'...', url:'files/example.stl'}
+
+	             5. Folders can contain unlimited subfolders. Keep names descriptive.
+
+	             6. To change colors, edit the variables in :root near the top.
+
+	             7. To change page wording, edit the header, h1 and intro above.
+
+	             NOTE: GitHub Pages is public. Do not upload private files.
+
+	             ===================================================================== */
+	/* =====================================================================
+	 EDIT FOLDERS AND FILES BELOW
+
+	 Only '3D Printing' is active right now.
+	 - Add a file: place a { type: 'file', ... } entry inside a children array.
+	 - Add a subfolder: place a { type: 'folder', children: [...] } entry
+	   inside any existing folder's children array.
+	 - Add another TOP-LEVEL folder: uncomment or copy the example entries
+	   below. They remain hidden from visitors until uncomment them.
+	 ===================================================================== */
 	const REPOSITORY = [{
-		type: 'folder',
-		name: '3D Printing',
-		description: '3D Models and 3D Printing things',
-		children: [{
 			type: 'folder',
-			name: '.STEP Files',
-			description: '.STEP Files for your enjoyment',
+			name: '3D Printing',
+			description: '3D Models and 3D Printing things',
 			children: [{
-				type: 'file',
-				name: 'Parametric SnapLock Storage Box',
-				description: 'Example STL — replace with your model',
-				url: 'https://github.com/RHopper85/rhopper85.github.io/blob/main/3D%20Print%20Stuff/SnapLock%2BStorage%2Bbox%2B2%2Blatches.step'
-			}]
-		}, {
-			type: 'folder',
-			name: 'Decorative Models',
-			description: 'Display pieces and props',
-			children: []
-		}, {
-			type: 'folder',
-			name: 'Printer Upgrades',
-			description: 'Mods and accessories',
-			children: []
-		}]
-	}, {
-		type: 'folder',
-		name: 'CAD & Design',
-		description: 'Source models and editable designs',
-		children: [{
-			type: 'file',
-			name: 'Example Project.step',
-			description: 'Example CAD file',
-			url: 'files/example-project.step'
-		}]
-	}, {
-		type: 'folder',
-		name: 'Graphics & Artwork',
-		description: 'SVGs, decals and design assets',
-		children: []
-	}, {
-		type: 'folder',
-		name: 'Build Projects',
-		description: 'Instructions, plans and project bundles',
-		children: []
-	}, {
-		type: 'folder',
-		name: 'The Miscellany',
-		description: 'Everything that does not fit elsewhere',
-		children: []
-	}];
+					type: 'folder',
+					name: '.STEP Files',
+					description: '.STEP Files for your enjoyment',
+					children: [{
+							type: 'file',
+							name: 'Parametric SnapLock Storage Box',
+							description: 'SnapLock storage box — STEP CAD model',
+							url: 'https://github.com/RHopper85/rhopper85.github.io/blob/main/3D%20Print%20Stuff/SnapLock%2BStorage%2Bbox%2B2%2Blatches.step'
+						}
+						// ADD MORE STEP FILES HERE (separate entries with commas).
+					]
+				}, {
+					type: 'folder',
+					name: 'Decorative Models',
+					description: 'Display pieces and props',
+					children: [] // ADD FILES OR SUBFOLDERS HERE.
+				}, {
+					type: 'folder',
+					name: 'Printer Upgrades',
+					description: 'Mods and accessories',
+					children: [] // ADD FILES OR SUBFOLDERS HERE.
+				}
+				// ADD MORE 3D PRINTING SUBFOLDERS HERE (start with a comma).
+			]
+		},
+		/* ===================================================================
+		   FUTURE TOP-LEVEL FOLDERS — CURRENTLY HIDDEN
+
+		   Remove this opening comment and the closing comment below to show
+		   these example folders again. Or copy one into the active array.
+		   The comma after the 3D Printing entry allows these to be uncommented.
+		   ===================================================================
+		{
+		  type: 'folder',
+		  name: 'CAD & Design',
+		  description: 'Source models and editable designs',
+		  children: []
+		},
+		{
+		  type: 'folder',
+		  name: 'Graphics & Artwork',
+		  description: 'SVGs, decals and design assets',
+		  children: []
+		},
+		{
+		  type: 'folder',
+		  name: 'Build Projects',
+		  description: 'Instructions, plans and project bundles',
+		  children: []
+		},
+		{
+		  type: 'folder',
+		  name: 'The Miscellany',
+		  description: 'Everything that does not fit elsewhere',
+		  children: []
+		}
+		END OF HIDDEN FUTURE FOLDERS ========================================= */
+	];
 	/* END OF CONTENT YOU NORMALLY NEED TO EDIT. The code below handles
-	   folder navigation, breadcrumbs, searching and download links. */
+
+	     folder navigation, breadcrumbs, searching and download links. */
 	let path = [];
 	const content = document.getElementById('content'),
 		crumbs = document.getElementById('breadcrumbs'),
