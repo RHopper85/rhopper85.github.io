@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0c1426" />
-  <meta name="description" content="A convenient home for frequently requested documents, templates, and resources." />
-  <title>Resource Library | File Hub</title>
+  <meta name="description" content="A collection of 3D-printable models, project files, and assorted downloads." />
+  <title>The File Stash | Downloads</title>
 
   <style>
     /* =============================================================
@@ -95,6 +95,8 @@
     .file-icon.doc,.file-icon.docx {background:rgba(100,166,255,.11);color:#94c5ff;}
     .file-icon.xls,.file-icon.xlsx,.file-icon.csv {background:rgba(91,214,162,.1);color:#7ce4b3;}
     .file-icon.ppt,.file-icon.pptx {background:rgba(255,177,104,.1);color:#ffc28e;}
+    .file-icon.stl,.file-icon.3mf,.file-icon.obj,.file-icon.step,.file-icon.stp,.file-icon.f3d {background:rgba(91,214,214,.12);color:#80e6e9;}
+    .file-icon.svg,.file-icon.png,.file-icon.jpg,.file-icon.jpeg {background:rgba(255,177,104,.1);color:#ffc28e;}
     .file-icon.zip,.file-icon.rar {background:rgba(181,143,255,.1);color:#baa5ff;}
     .file-icon.other {background:rgba(105,178,255,.11);color:#a2d1ff;}
     .badge { color:#bed1ec; background:rgba(194,213,244,.07); border:1px solid var(--line); padding:5px 9px; border-radius:7px; font-size:.68rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
@@ -136,14 +138,14 @@
         <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2-2h5l2 2h5a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M4 11h16"/></svg></span>
         <span id="siteBrand">File Hub</span>
       </a>
-      <div class="nav-right"><span class="status-dot" aria-hidden="true"></span> Documents &amp; downloads</div>
+      <div class="nav-right"><span class="status-dot" aria-hidden="true"></span> Models, files &amp; random stuff</div>
     </div>
   </header>
 
   <main id="top">
     <section class="hero wrap" aria-labelledby="heroTitle">
-      <span class="eyebrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3"/></svg> Your resource center</span>
-      <h1 id="heroTitle">Everything you need.<br><span>All in one place.</span></h1>
+      <span class="eyebrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3"/></svg> The download stash</span>
+      <h1 id="heroTitle">I made a thing.<br><span>Here are the files.</span></h1>
       <p class="intro" id="siteIntro"></p>
       <div class="hero-stats" aria-label="Library statistics">
         <div class="stat"><span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v5h4"/></svg></span><span><strong id="totalFiles">0</strong><small>Available files</small></span></div>
@@ -159,7 +161,7 @@
         </div>
         <div class="filters" id="categoryFilters" role="group" aria-label="Filter by category"></div>
       </div>
-      <div class="section-header"><div><h2 id="libraryTitle">Browse Resources</h2><p id="sectionSubtext">Find and share the documents you need.</p></div></div>
+      <div class="section-header"><div><h2 id="libraryTitle">Browse the Stash</h2><p id="sectionSubtext">3D prints, project files, and other useful odds and ends.</p></div></div>
       <div id="fileGrid" class="grid"></div>
       <div id="emptyState" class="empty hide" role="status"><h3>No matching resources</h3><p>Try a different search term or select another category.</p></div>
       <div class="notice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg><div><strong>Can't find what you're looking for?</strong><p id="helpText">Contact the site owner for additional files or updated versions.</p></div></div>
@@ -175,9 +177,9 @@
        not require any framework, build process, API, or paid service.
        ============================================================= */
     const SITE = {
-      name: "Resource Library",                // Top-left label and footer text
-      intro: "A centralized collection of frequently requested forms, templates, checklists, guides, and other useful files. Search, browse, and download what you need.",
-      helpText: "Need another document or a more recent version? Reach out to the person who shared this page.",
+      name: "The File Stash",                // Top-left label and footer text
+      intro: "People keep asking me for files, so I put them all here. Grab a 3D-printing model, project download, or whatever else I have shared. No accounts, no digging through messages.",
+      helpText: "Looking for something I mentioned but never uploaded? Just ask me for it.",
     };
 
     /* =============================================================
@@ -192,8 +194,8 @@
        FIELD GUIDE:
        title:       Display name shown on the card.
        category:    Group name. New categories appear automatically!
-       description: Short sentence describing the document.
-       url:         Path to file, e.g. "files/my-checklist.pdf".
+       description: Short sentence describing the file or project.
+       url:         Path to file, e.g. "files/my-model.stl".
                     You can also use an entire https:// URL.
        updated:     Optional label, e.g. "Oct 2026" or "Version 2".
        type:        Optional file type override e.g. "PDF" or "DOCX".
@@ -208,54 +210,54 @@
        ============================================================= */
     const FILES = [
       {
-        title: "General Safety Orientation",
-        category: "Training & Orientation",
-        description: "Reference materials for new-hire safety orientation and onboarding.",
-        url: "files/general-safety-orientation.pdf",
-        updated: "Sample document",
+        title: "Desk Cable Clip",
+        category: "3D Printing",
+        description: "Small snap-in cable organizer for a desk. Download the STL and print your own.",
+        url: "files/desk-cable-clip.stl",
+        updated: "Example • STL",
         featured: true
       },
       {
-        title: "Training Attendance Log",
-        category: "Forms & Templates",
-        description: "Reusable sign-in sheet to document training attendance and signatures.",
-        url: "files/training-attendance-log.docx",
-        updated: "Sample document",
+        title: "Modular Storage Tray",
+        category: "3D Printing",
+        description: "Printable tray for organizing screws, components, and other small parts.",
+        url: "files/modular-storage-tray.3mf",
+        updated: "Example • 3MF",
         featured: true
       },
       {
-        title: "MEWP Inspection Checklist",
-        category: "Inspections & Checklists",
-        description: "Pre-use inspection form for mobile elevating work platforms.",
-        url: "files/mewp-inspection-checklist.pdf",
-        updated: "Sample document"
+        title: "Custom Bracket Source Files",
+        category: "CAD & Design",
+        description: "Editable source model for customizing the bracket dimensions.",
+        url: "files/custom-bracket.step",
+        updated: "Example • STEP"
       },
       {
-        title: "Incident Reporting Guide",
-        category: "Safety Resources",
-        description: "Quick-reference information for reporting incidents and near misses.",
-        url: "files/incident-reporting-guide.pdf",
-        updated: "Sample document"
+        title: "Project Build Files",
+        category: "Projects",
+        description: "A ZIP archive with plans, reference files, and everything for the build.",
+        url: "files/project-build-files.zip",
+        updated: "Example • ZIP"
       },
       {
-        title: "Warehouse Sign-In Sheet",
-        category: "Forms & Templates",
-        description: "Visitor and employee sign-in log for warehouse activities.",
-        url: "files/warehouse-sign-in-sheet.xlsx",
-        updated: "Sample document"
+        title: "Printable Decal Artwork",
+        category: "Graphics & Artwork",
+        description: "Scalable artwork for stickers, labels, or other creative projects.",
+        url: "files/printable-decal.svg",
+        updated: "Example • SVG"
       },
       {
-        title: "Fall Protection Reference",
-        category: "Safety Resources",
-        description: "A quick reference for common fall protection requirements.",
-        url: "files/fall-protection-reference.pdf",
-        updated: "Sample document"
+        title: "Miscellaneous Download",
+        category: "Random Stuff",
+        description: "A home for the one-off files that don't fit neatly anywhere else.",
+        url: "files/misc-download.zip",
+        updated: "Example • ZIP"
       }
     ];
 
     /* =============================================================
        EDIT SECTION 5: OPTIONAL BEHAVIOR
-       FEATURED_FIRST: Show featured documents at the front of results.
+       FEATURED_FIRST: Show featured files at the front of results.
        SORT_ALPHABETICALLY: Alphabetize within featured/nonfeatured.
        ============================================================= */
     const FEATURED_FIRST = true;
@@ -345,10 +347,10 @@
       const grid=byId('fileGrid');grid.replaceChildren(...matched.map(makeCard));
       byId('emptyState').classList.toggle('hide',matched.length!==0);
       byId('resultCount').textContent=`Showing ${matched.length} of ${FILES.length} files`;
-      byId('sectionSubtext').textContent=state.category==='All Files'?'Find and share the documents you need.':`Viewing ${state.category.toLowerCase()} resources.`;
+      byId('sectionSubtext').textContent=state.category==='All Files'?'3D prints, project files, and other useful odds and ends.':`Viewing ${state.category.toLowerCase()} resources.`;
     }
     function init() {
-      document.title=`${SITE.name} | Resources`;
+      document.title=`${SITE.name} | Downloads`;
       byId('siteBrand').textContent=SITE.name;
       byId('footerBrand').textContent=`© ${new Date().getFullYear()} ${SITE.name}`;
       byId('siteIntro').textContent=SITE.intro;
