@@ -1,432 +1,413 @@
 <!doctype html>
 <html lang="en">
-
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width,initial-scale=1">
-	<title>Rob's Repository</title>
-	<style>
-	:root {
-		color-scheme: dark;
-		--bg: #0c1015;
-		--panel: #151c24;
-		--panel2: #1d2731;
-		--line: #35414a;
-		--gold: #d5b476;
-		--text: #f1ede3;
-		--muted: #a7b0b8
-	}
-	
-	* {
-		box-sizing: border-box
-	}
-	
-	body {
-		margin: 0;
-		background: radial-gradient(ellipse at 80% -10%, #293a42, transparent 45%), var(--bg);
-		color: var(--text);
-		font: 15px/1.55 system-ui, Segoe UI, sans-serif
-	}
-	
-	header {
-		border-bottom: 1px solid var(--line);
-		padding: 24px max(24px, calc((100vw - 1100px)/2));
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		gap: 16px
-	}
-	
-	.mark {
-		color: var(--gold);
-		font-size: 25px
-	}
-	
-	header small {
-		color: var(--muted)
-	}
-	
-	main {
-		max-width: 1100px;
-		margin: auto;
-		padding: 55px 24px 90px
-	}
-	
-	.eyebrow {
-		color: var(--gold);
-		letter-spacing: .24em;
-		text-transform: uppercase;
-		font-size: 12px;
-		font-weight: 700
-	}
-	
-	h1 {
-		font: normal clamp(42px, 7vw, 76px)/1.1 Georgia, serif;
-		letter-spacing: -.035em;
-		margin: 12px 0
-	}
-	
-	h1 span {
-		color: var(--gold)
-	}
-	
-	.intro {
-		color: var(--muted);
-		max-width: 630px;
-		font-size: 17px
-	}
-	
-	.toolbar {
-		display: flex;
-		gap: 12px;
-		margin: 36px 0 24px;
-		flex-wrap: wrap
-	}
-	
-	input {
-		background: #10171d;
-		border: 1px solid var(--line);
-		border-radius: 10px;
-		padding: 15px 17px;
-		color: var(--text);
-		font: inherit;
-		flex: 1;
-		min-width: 230px
-	}
-	
-	input:focus {
-		outline: 2px solid var(--gold)
-	}
-	
-	button {
-		cursor: pointer;
-		font: inherit
-	}
-	
-	.crumb {
-		color: var(--muted);
-		margin-bottom: 18px;
-		display: flex;
-		gap: 8px;
-		flex-wrap: wrap;
-		align-items: center
-	}
-	
-	.crumb button {
-		border: 0;
-		background: none;
-		color: var(--gold);
-		padding: 3px
-	}
-	
-	.crumb span {
-		color: #63727b
-	}
-	
-	.grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-		gap: 15px
-	}
-	
-	.tile {
-		background: linear-gradient(145deg, var(--panel), #121920);
-		border: 1px solid var(--line);
-		border-radius: 14px;
-		padding: 20px;
-		min-height: 170px;
-		display: flex;
-		flex-direction: column;
-		transition: transform .15s, border-color .15s
-	}
-	
-	.tile:hover {
-		transform: translateY(-2px);
-		border-color: #9b835b
-	}
-	
-	.tile .symbol {
-		font-size: 28px;
-		color: var(--gold)
-	}
-	
-	.tile h3 {
-		font: normal 23px Georgia, serif;
-		margin: 13px 0 5px
-	}
-	
-	.tile p {
-		color: var(--muted);
-		margin: 0 0 16px;
-		font-size: 13px;
-		flex: 1
-	}
-	
-	.tile .foot {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 10px;
-		color: var(--muted);
-		font-size: 12px
-	}
-	
-	.tile button,
-	.tile a {
-		background: transparent;
-		color: var(--gold);
-		border: 1px solid #695a40;
-		padding: 7px 12px;
-		border-radius: 8px;
-		text-decoration: none;
-		font-size: 13px
-	}
-	
-	.tile button:hover,
-	.tile a:hover {
-		background: #3a3020
-	}
-	
-	.section {
-		margin: 0 0 18px;
-		color: var(--gold);
-		font-size: 12px;
-		letter-spacing: .18em;
-		text-transform: uppercase
-	}
-	
-	.empty {
-		padding: 40px;
-		border: 1px dashed var(--line);
-		border-radius: 12px;
-		color: var(--muted)
-	}
-	
-	footer {
-		max-width: 1100px;
-		margin: auto;
-		padding: 24px;
-		color: #7f8d95;
-		border-top: 1px solid var(--line);
-		font-size: 13px
-	}
-	
-	@media(max-width:600px) {
-		header {
-			padding: 20px 24px
-		}
-		main {
-			padding-top: 36px
-		}
-	}
-	</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0c1015">
+  <title>Rob's Repository</title>
+  <style>
+    /* ================================================================
+       THEME — Adjust the colors here to restyle the entire website.
+       ================================================================ */
+    :root {
+      color-scheme: dark;
+      --bg: #0c1015;
+      --panel: #151c24;
+      --panel2: #1d2731;
+      --line: #35414a;
+      --gold: #d5b476;
+      --text: #f1ede3;
+      --muted: #a7b0b8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(ellipse at 80% -10%, #293a42, transparent 45%), var(--bg);
+      color: var(--text);
+      font: 15px/1.55 system-ui, "Segoe UI", sans-serif;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      padding: 24px max(24px, calc((100vw - 1100px)/2));
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .mark { color: var(--gold); font-size: 25px; }
+    header small { color: var(--muted); }
+    main { max-width: 1100px; margin: auto; padding: 55px 24px 90px; min-height: 75vh; }
+    .eyebrow { color: var(--gold); letter-spacing: .24em; text-transform: uppercase; font-size: 12px; font-weight: 700; }
+    h1 { font: normal clamp(42px, 7vw, 76px)/1.1 Georgia, serif; letter-spacing: -.035em; margin: 12px 0; }
+    h1 span { color: var(--gold); }
+    .intro { color: var(--muted); max-width: 630px; font-size: 17px; }
+    .toolbar { display: flex; gap: 12px; margin: 36px 0 24px; flex-wrap: wrap; }
+    input {
+      background: #10171d;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 15px 17px;
+      color: var(--text);
+      font: inherit;
+      flex: 1;
+      min-width: 230px;
+    }
+    input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+    button { cursor: pointer; font: inherit; }
+    .refresh {
+      border: 1px solid #695a40;
+      border-radius: 10px;
+      background: #24271f;
+      color: var(--gold);
+      padding: 12px 16px;
+      transition: background .15s;
+    }
+    .refresh:hover { background: #3a3020; }
+    .refresh:disabled { opacity: .6; cursor: wait; }
+    .crumb { color: var(--muted); margin-bottom: 18px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .crumb button { border: 0; background: none; color: var(--gold); padding: 3px; }
+    .crumb .separator { color: #63727b; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
+    .tile {
+      background: linear-gradient(145deg, var(--panel), #121920);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 20px;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      transition: transform .15s, border-color .15s;
+    }
+    .tile:hover { transform: translateY(-2px); border-color: #9b835b; }
+    .tile .symbol { font-size: 28px; color: var(--gold); }
+    .tile h3 { font: normal 23px Georgia, serif; overflow-wrap: anywhere; margin: 13px 0 5px; }
+    .tile p { color: var(--muted); overflow-wrap: anywhere; margin: 0 0 16px; font-size: 13px; flex: 1; }
+    .tile .foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 12px; }
+    .tile button, .tile a {
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid #695a40;
+      padding: 7px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .tile button:hover, .tile a:hover { background: #3a3020; }
+    .section { margin: 0 0 18px; color: var(--gold); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; }
+    .empty { padding: 40px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); }
+    .empty strong { color: var(--text); }
+    .status { min-height: 22px; color: var(--muted); font-size: 13px; margin-top: 22px; }
+    footer { max-width: 1100px; margin: auto; padding: 24px; color: #7f8d95; border-top: 1px solid var(--line); font-size: 13px; }
+    @media (max-width: 600px) {
+      header { padding: 20px 24px; align-items: flex-start; }
+      header > small { display: none; }
+      main { padding-top: 36px; }
+    }
+  </style>
 </head>
-
 <body>
-	<header>
-		<div>
-			<div class="mark">⚔ &nbsp; Rob's Repository</div><small>THE ARCHIVE · EST. 2026</small></div><small>Files • Models • Oddities</small></header>
-	<main>
-		<div class="eyebrow">Welcome to the vault</div>
-		<h1>Rob's <span>Repository.</span></h1>
-		<p class="intro">A curated collection of things I've made, collected, and shared. Explore the folders, find what you need, and take it with you.</p>
-		<div class="toolbar">
-			<input id="search" type="search" placeholder="Search the entire repository…" aria-label="Search files and folders"> </div>
-		<nav class="crumb" id="breadcrumbs" aria-label="Folder path"></nav>
-		<div id="content"></div>
-	</main>
-	<footer>✦ Rob's Repository · Crafted for the curious.</footer>
-	<script>
-	/* =====================================================================
+  <!-- ================================================================
+       PAGE TEXT — You can edit the visible title and introduction here.
+       ================================================================ -->
+  <header>
+    <div><div class="mark">⚔ &nbsp; Rob's Repository</div><small>THE ARCHIVE · EST. 2026</small></div>
+    <small>Files • Models • Oddities</small>
+  </header>
+  <main>
+    <div class="eyebrow">Welcome to the vault</div>
+    <h1>Rob's <span>Repository.</span></h1>
+    <p class="intro">A curated collection of things I've made, collected, and shared. Explore the folders, find what you need, and take it with you.</p>
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="Search the entire repository…" aria-label="Search files and folders">
+      <button id="refresh" class="refresh" type="button" title="Check GitHub for the latest files">↻ Refresh files</button>
+    </div>
+    <nav class="crumb" id="breadcrumbs" aria-label="Folder path"></nav>
+    <div id="content" aria-live="polite"><div class="empty">Loading folders from GitHub…</div></div>
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+  </main>
+  <footer>✦ Rob's Repository · Crafted for the curious.</footer>
 
-	             ROB'S REPOSITORY — EASY EDITING GUIDE
+  <script>
+    /* =====================================================================
+       ROB'S REPOSITORY — AUTOMATIC GITHUB FILE LIBRARY
 
-	             1. Add actual files to a /files folder in GitHub repository.
+       NO MORE MANUAL FILE LISTS.
+       Whenever you upload/delete/rename a file or folder in GitHub, the page
+       reflects the new repository layout on its next refresh/load.
 
-	             2. Edit ONLY the REPOSITORY array below to add folders and downloads.
+       IMPORTANT: Public GitHub Pages + public repository required.
+       Repository: https://github.com/RHopper85/rhopper85.github.io
 
-	             3. A folder uses: {type:'folder', name:'...', children:[ ... ]}
+       HOW IT WORKS:
+       1. Read the entire main branch folder tree from GitHub's public API.
+       2. Show each root folder as a category (e.g. "3D Print Stuff").
+       3. Clicking a folder reveals its subfolders and downloadable files.
+       4. Link to the SAME GitHub Pages domain for direct file downloads,
+          instead of GitHub's /blob/ source-code viewer.
 
-	             4. A file uses: {type:'file', name:'...', url:'files/example.stl'}
+       YOU GENERALLY DON'T NEED TO EDIT ANYTHING BELOW.
+       ===================================================================== */
 
-	             5. Folders can contain unlimited subfolders. Keep names descriptive.
+    /* ====== EDIT SETTINGS HERE (rarely necessary) ========================= */
+    const CONFIG = {
+      owner: 'RHopper85',
+      repo: 'rhopper85.github.io',
+      branch: 'main',
 
-	             6. To change colors, edit the variables in :root near the top.
+      // Keep GitHub's maintenance folders off the public download page.
+      // Delete a name from this list if you want that folder displayed.
+      hiddenRootFolders: ['.github', 'node_modules'],
 
-	             7. To change page wording, edit the header, h1 and intro above.
+      // The repository's root contains the website files (index.html etc.).
+      // Show root FOLDERS only; every file within them is included.
+      // Change to true to also show loose files in the repo's root.
+      showRootFiles: false,
 
-	             NOTE: GitHub Pages is public. Do not upload private files.
+      // Applies only if showRootFiles is true.
+      hiddenRootFiles: ['index.html', 'README.md', '.nojekyll', 'favicon.ico']
+    };
+    /* ====== END EDIT SETTINGS ============================================= */
 
-	             ===================================================================== */
-	/* =====================================================================
-	 EDIT FOLDERS AND FILES BELOW
+    const search = document.getElementById('search');
+    const refreshButton = document.getElementById('refresh');
+    const breadcrumbs = document.getElementById('breadcrumbs');
+    const content = document.getElementById('content');
+    const status = document.getElementById('status');
 
-	 Only '3D Printing' is active right now.
-	 - Add a file: place a { type: 'file', ... } entry inside a children array.
-	 - Add a subfolder: place a { type: 'folder', children: [...] } entry
-	   inside any existing folder's children array.
-	 - Add another TOP-LEVEL folder: uncomment or copy the example entries
-	   below. They remain hidden from visitors until uncomment them.
-	 ===================================================================== */
-	const REPOSITORY = [{
-			type: 'folder',
-			name: '3D Printing',
-			description: '3D Models and 3D Printing things',
-			children: [{
-					type: 'folder',
-					name: '.STEP Files',
-					description: '.STEP Files for your enjoyment',
-					children: [{
-							type: 'file',
-							name: 'Parametric SnapLock Storage Box',
-							description: 'SnapLock storage box — STEP CAD model',
-							url: 'url: '3D%20Print%20Stuff/SnapLock%2BStorage%2Bbox%2B2%2Blatches.step''
-						}
-						// ADD MORE STEP FILES HERE (separate entries with commas).
-					]
-				}/*, {
-					type: 'folder',
-					name: 'Decorative Models',
-					description: 'Display pieces and props',
-					children: [] // ADD FILES OR SUBFOLDERS HERE.
-				}, {
-					type: 'folder',
-					name: 'Printer Upgrades',
-					description: 'Mods and accessories',
-					children: [] // ADD FILES OR SUBFOLDERS HERE.
-				} */
-				// ADD MORE 3D PRINTING SUBFOLDERS HERE (start with a comma).
-			]
-		},
-		/* ===================================================================
-		   FUTURE TOP-LEVEL FOLDERS — CURRENTLY HIDDEN
+    let root = makeFolder('');
+    let currentPath = [];
+    let loaded = false;
 
-		   Remove this opening comment and the closing comment below to show
-		   these example folders again. Or copy one into the active array.
-		   The comma after the 3D Printing entry allows these to be uncommented.
-		   ===================================================================
-		{
-		  type: 'folder',
-		  name: 'CAD & Design',
-		  description: 'Source models and editable designs',
-		  children: []
-		},
-		{
-		  type: 'folder',
-		  name: 'Graphics & Artwork',
-		  description: 'SVGs, decals and design assets',
-		  children: []
-		},
-		{
-		  type: 'folder',
-		  name: 'Build Projects',
-		  description: 'Instructions, plans and project bundles',
-		  children: []
-		},
-		{
-		  type: 'folder',
-		  name: 'The Miscellany',
-		  description: 'Everything that does not fit elsewhere',
-		  children: []
-		}
-		END OF HIDDEN FUTURE FOLDERS ========================================= */
-	];
-	/* END OF CONTENT YOU NORMALLY NEED TO EDIT. The code below handles
+    function makeFolder(name, path = '') {
+      return { type: 'folder', name, path, children: [], _folders: new Map() };
+    }
 
-	     folder navigation, breadcrumbs, searching and download links. */
-	let path = [];
-	const content = document.getElementById('content'),
-		crumbs = document.getElementById('breadcrumbs'),
-		search = document.getElementById('search');
-	const safe = s => String(s).replace(/[&<>"']/g, c => ({
-		'&': '&amp;',
-		'<': '&lt;',
-		'>': '&gt;',
-		'"': '&quot;',
-		"'": '&#39;'
-	}[c]));
-	const getFolder = () => path.reduce((items, i) => items[i].children, REPOSITORY);
+    /* Turn GitHub's flat list ("Folder/Subfolder/model.stl") into a hierarchy. */
+    function buildFolderTree(entries) {
+      const top = makeFolder('');
+      for (const entry of entries) {
+        if (entry.type !== 'tree' && entry.type !== 'blob') continue;
+        const parts = entry.path.split('/');
+        const topName = parts[0];
 
-	function flatten(items, parents = [], out = []) {
-		items.forEach((item, i) => {
-			out.push({
-				item, path: [...parents, i]
-			});
-			if(item.type === 'folder') flatten(item.children, [...parents, i], out)
-		});
-		return out
-	}
+        if (CONFIG.hiddenRootFolders.includes(topName)) continue;
+        if (parts.length === 1 && entry.type === 'blob') {
+          if (!CONFIG.showRootFiles || CONFIG.hiddenRootFiles.includes(topName)) continue;
+        }
 
-	function draw() {
-		const q = search.value.trim().toLowerCase();
-		const entries = q ? flatten(REPOSITORY).filter(({
-			item, path: p
-		}) => [item.name, item.description || '', p.slice(0, -1).reduce((a, i) => a.concat(a.length ? [] : [i]), []).join(' ')].join(' ').toLowerCase().includes(q)) : getFolder().map((item, i) => ({
-			item, path: [...path, i]
-		}));
-		crumbs.innerHTML = '';
-		const segments = [{
-			name: 'Vault',
-			path: []
-		}];
-		if(!q) {
-			let arr = REPOSITORY;
-			path.forEach(i => {
-				segments.push({
-					name: arr[i].name,
-					path: segments.length === 1 ? [i] : [...segments[segments.length - 1].path, i]
-				});
-				arr = arr[i].children
-			})
-		}
-		segments.forEach((s, i) => {
-			if(i) crumbs.append(' / ');
-			const b = document.createElement('button');
-			b.textContent = s.name;
-			b.onclick = () => {
-				path = s.path;
-				search.value = '';
-				draw()
-			};
-			crumbs.append(b)
-		});
-		if(q) crumbs.append(' / Search results');
-		content.innerHTML = entries.length ? '<div class="section">' + (q ? 'Search results' : path.length ? 'Inside this folder' : 'Browse the collection') + ' · ' + entries.length + ' items</div><div class="grid" id="tiles"></div>' : '<div class="empty">' + (q ? 'No matching items. Try another search.' : 'Nothing here yet. Check back later.') + '</div>';
-		const grid = document.getElementById('tiles');
-		if(!grid) return;
-		entries.forEach(({
-			item, path: p
-		}) => {
-			const el = document.createElement('article');
-			el.className = 'tile';
-			const folder = item.type === 'folder';
-			const count = folder ? item.children.length + ' items' : (item.name.split('.').pop() || 'FILE').toUpperCase();
-			el.innerHTML = '<div class="symbol">' + (folder ? '▣' : '◇') + '</div><h3>' + safe(item.name) + '</h3><p>' + safe(item.description || (folder ? 'Open this collection' : 'Download this file')) + '</p><div class="foot"><span>' + safe(count) + '</span></div>';
-			const action = folder ? document.createElement('button') : document.createElement('a');
-			action.textContent = folder ? 'Open folder →' : 'Download ↗';
-			if(folder) {
-				action.onclick = () => {
-					path = p;
-					search.value = '';
-					draw();
-					window.scrollTo({
-						top: 0,
-						behavior: 'smooth'
-					})
-				}
-			} else {
-				action.href = item.url;
-				action.setAttribute('download', '');
-				action.setAttribute('target', '_blank');
-				action.setAttribute('rel', 'noopener noreferrer')
-			}
-			el.querySelector('.foot').append(action);
-			grid.append(el)
-		})
-	}
-	search.addEventListener('input', draw);
-	draw();
-	</script>
+        let folder = top;
+        const folders = entry.type === 'tree' ? parts : parts.slice(0, -1);
+        for (const part of folders) {
+          if (!folder._folders.has(part)) {
+            const newPath = folder.path ? `${folder.path}/${part}` : part;
+            const next = makeFolder(part, newPath);
+            folder._folders.set(part, next);
+            folder.children.push(next);
+          }
+          folder = folder._folders.get(part);
+        }
+
+        if (entry.type === 'blob') {
+          folder.children.push({
+            type: 'file',
+            name: parts[parts.length - 1],
+            path: entry.path,
+            size: entry.size ?? null
+          });
+        }
+      }
+      function sortAndClean(folder) {
+        folder.children.sort((a, b) => {
+          if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+          return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+        });
+        delete folder._folders;
+        for (const child of folder.children) if (child.type === 'folder') sortAndClean(child);
+      }
+      sortAndClean(top);
+      return top;
+    }
+
+    /* Same-origin URL: browser's download attribute works for STEP, STL,
+       3MF, ZIP, etc. Handles spaces, plus signs and other filename characters. */
+    function downloadUrl(repoPath) {
+      return new URL(repoPath.split('/').map(encodeURIComponent).join('/'), document.baseURI).href;
+    }
+
+    function fileSize(bytes) {
+      if (bytes === null || bytes === undefined) return 'FILE';
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / (1024 ** 2)).toFixed(1)} MB`;
+    }
+
+    function fileType(name) {
+      const match = name.match(/\.([^.]+)$/);
+      return match ? match[1].toUpperCase() : 'FILE';
+    }
+
+    function visibleFolder() {
+      let folder = root;
+      for (const name of currentPath) {
+        const next = folder.children.find(item => item.type === 'folder' && item.name === name);
+        if (!next) { currentPath = []; return root; }
+        folder = next;
+      }
+      return folder;
+    }
+
+    function allEntries(folder, matches = []) {
+      for (const child of folder.children) {
+        matches.push(child);
+        if (child.type === 'folder') allEntries(child, matches);
+      }
+      return matches;
+    }
+
+    function navigate(path) {
+      currentPath = path;
+      search.value = '';
+      draw();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function drawBreadcrumbs(isSearch) {
+      breadcrumbs.replaceChildren();
+      const crumbs = [{ name: 'Vault', path: [] }];
+      if (!isSearch) currentPath.forEach((name, i) => crumbs.push({ name, path: currentPath.slice(0, i + 1) }));
+      for (let i = 0; i < crumbs.length; i++) {
+        if (i > 0) {
+          const separator = document.createElement('span');
+          separator.className = 'separator';
+          separator.textContent = '/';
+          breadcrumbs.append(separator);
+        }
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = crumbs[i].name;
+        button.addEventListener('click', () => navigate(crumbs[i].path));
+        breadcrumbs.append(button);
+      }
+      if (isSearch) {
+        const label = document.createElement('span');
+        label.textContent = '/ Search results';
+        breadcrumbs.append(label);
+      }
+    }
+
+    function addTile(item) {
+      const article = document.createElement('article');
+      article.className = 'tile';
+
+      const symbol = document.createElement('div');
+      symbol.className = 'symbol';
+      symbol.textContent = item.type === 'folder' ? '▣' : '◇';
+
+      const heading = document.createElement('h3');
+      heading.textContent = item.name;
+
+      const details = document.createElement('p');
+      details.textContent = item.type === 'folder'
+        ? 'Open to browse files and subfolders'
+        : `Download ${fileType(item.name)} file`;
+
+      const foot = document.createElement('div');
+      foot.className = 'foot';
+      const metadata = document.createElement('span');
+      metadata.textContent = item.type === 'folder'
+        ? `${item.children.length} ${item.children.length === 1 ? 'item' : 'items'}`
+        : `${fileType(item.name)} · ${fileSize(item.size)}`;
+
+      let action;
+      if (item.type === 'folder') {
+        action = document.createElement('button');
+        action.type = 'button';
+        action.textContent = 'Open folder →';
+        action.addEventListener('click', () => navigate(item.path.split('/')));
+      } else {
+        action = document.createElement('a');
+        action.textContent = 'Download ↓';
+        action.href = downloadUrl(item.path);
+        action.download = item.name; // Forces save instead of a GitHub viewer page.
+      }
+
+      foot.append(metadata, action);
+      article.append(symbol, heading, details, foot);
+      return article;
+    }
+
+    /* Render current folder; typing in the search box searches ALL folders. */
+    function draw() {
+      if (!loaded) return;
+      const query = search.value.trim().toLocaleLowerCase();
+      const matches = query
+        ? allEntries(root).filter(entry => entry.path.toLocaleLowerCase().includes(query))
+        : visibleFolder().children;
+      drawBreadcrumbs(Boolean(query));
+      content.replaceChildren();
+
+      if (!matches.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = query
+          ? 'No matching items. Try another search.'
+          : 'Nothing here yet. Upload files or create folders in GitHub, then refresh.';
+        content.append(empty);
+        return;
+      }
+      const section = document.createElement('div');
+      section.className = 'section';
+      section.textContent = `${query ? 'Search results' : currentPath.length ? 'Inside this folder' : 'Browse the collection'} · ${matches.length} ${matches.length === 1 ? 'item' : 'items'}`;
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+      matches.forEach(item => grid.append(addTile(item)));
+      content.append(section, grid);
+    }
+
+    /* Fetch the current repository contents automatically — no login/token. */
+    async function loadRepository() {
+      refreshButton.disabled = true;
+      refreshButton.textContent = '↻ Checking…';
+      status.textContent = 'Checking GitHub for your folders and files…';
+      try {
+        const { owner, repo, branch } = CONFIG;
+        const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
+        const response = await fetch(apiUrl, {
+          headers: { Accept: 'application/vnd.github+json' },
+          cache: 'no-store'
+        });
+        if (!response.ok) {
+          if (response.status === 403 || response.status === 429) throw new Error('GitHub API request limit reached. Please try again later.');
+          if (response.status === 404) throw new Error('Repository or branch not found. Check the settings and confirm the repository is public.');
+          throw new Error(`GitHub returned HTTP ${response.status}.`);
+        }
+        const result = await response.json();
+        if (result.truncated) throw new Error('The GitHub listing is too large to load completely.');
+        if (!Array.isArray(result.tree)) throw new Error('GitHub returned an unexpected folder listing.');
+        root = buildFolderTree(result.tree);
+        loaded = true;
+        draw();
+        status.textContent = 'Synced with GitHub · Upload new files to your repository, then click Refresh files.';
+      } catch (error) {
+        if (!loaded) {
+          breadcrumbs.replaceChildren();
+          content.replaceChildren();
+          const message = document.createElement('div');
+          message.className = 'empty';
+          message.textContent = `Could not load repository: ${error.message}`;
+          content.append(message);
+        }
+        status.textContent = `Unable to refresh: ${error.message}`;
+      } finally {
+        refreshButton.disabled = false;
+        refreshButton.textContent = '↻ Refresh files';
+      }
+    }
+
+    search.addEventListener('input', draw);
+    refreshButton.addEventListener('click', loadRepository);
+    loadRepository();
+  </script>
 </body>
-
 </html>
