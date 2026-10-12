@@ -171,7 +171,63 @@
     .link-favicon .favicon-fallback { font-size: 27px; line-height: 1; }
     .link-tile .link-domain { display: inline-block; margin-top: 2px; overflow-wrap: anywhere;
       font-size: 12px; color: #c2a36d; }
+    /* ================================================================
+       FILE CARD THUMBNAILS — Files with 3D geometry generate a miniature
+       model render. PNG/JPG/WebP/GIF/SVG files show their own image.
+       File thumbnails load lazily, one at a time, and are cached locally.
+       ================================================================ */
+    .file-tile { overflow: hidden; }
+    .file-media {
+      position: relative; aspect-ratio: 16 / 10;
+      margin: -20px -20px 18px;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; isolation: isolate;
+      background: radial-gradient(ellipse at 38% 28%, #31434b 0%, #1a2732 55%, #101820 100%);
+      border-bottom: 1px solid #46505a;
+    }
+    .file-media::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(135deg, #d5b4760b, transparent 65%);
+    }
+    .file-media .media-placeholder { color: #d5b476a8; font-size: 44px; line-height: 1; }
+    .file-media img { display: block; width: 100%; height: 100%; object-fit: contain; }
+    .file-media .media-chip {
+      position: absolute; right: 10px; top: 10px; z-index: 1;
+      border-radius: 6px; padding: 4px 8px; color: #ecd9af;
+      background: #0b1219de; border: 1px solid #977a4980;
+      font-size: 10px; font-weight: 750; letter-spacing: .12em;
+    }
+    .file-media .media-caption {
+      position: absolute; bottom: 10px; left: 12px; z-index: 1;
+      border-radius: 6px; padding: 3px 7px;
+      background: #0c1319ca; color: #d5c8af; font-size: 11px;
+    }
+    .file-media.is-loading .media-placeholder { animation: throb 1.5s ease-in-out infinite; }
+    @keyframes throb { 50% { opacity: .35; transform: scale(.96); } }
+    .file-tile .foot { margin-top: auto; }
+    .file-media.is-clickable { cursor: pointer; }
+    .file-media.is-clickable:hover { border-bottom-color: #be965c; }
+    .file-media.is-clickable:focus-visible { outline: 2px solid var(--gold); outline-offset: -3px; }
+    /* ================================================================
+       POLISHED LINK CARDS — The favicon, website name and domain form
+       a compact header. Link descriptions and category context sit below.
+       ================================================================ */
+    .link-tile { position: relative; min-height: 190px; }
+    .link-tile:hover { border-color: #ad8c57; box-shadow: 0 8px 30px #0003; }
+    .link-tile .link-head { display: flex; gap: 13px; align-items: center; margin-bottom: 17px; }
+    .link-tile .link-head-copy { min-width: 0; flex: 1; }
+    .link-tile .link-head h3 { font-size: 21px; line-height: 1.2; margin: 0 0 5px; }
+    .link-tile .link-domain { display: block; margin: 0; overflow-wrap: anywhere;
+      font-size: 12px; color: #c2a36d; }
+    .link-tile .link-description { font-size: 14px; line-height: 1.55; margin-bottom: 16px; }
+    .link-tile .link-location { margin: -2px 0 13px; font-size: 11px; color: #aab7bf; }
     .link-tile .foot { margin-top: auto; }
+    .link-tile .link-visit { background: #342b1d; font-weight: 600; padding: 7px 10px; }
+    .link-tile .link-kind { color: #9dadb7; font-size: 10px; letter-spacing: .14em; font-weight: 700; }
+    .link-tile .link-favicon { border-color: #806b48; background: #202932; }
+    @media(prefers-reduced-motion: reduce) {
+      .file-media.is-loading .media-placeholder { animation: none; }
+    }
     .links-description { color: var(--muted); margin: 21px 0 0; font-size: 14px; }
     .link-location { font-size: 11px; color: var(--muted); margin: -6px 0 14px; overflow-wrap: anywhere; }
 
@@ -279,6 +335,9 @@
        If a website displays the wrong icon, optionally add a custom URL:
          favicon: 'https://example.com/my-icon.png'
        Add a comma after the url field before adding `favicon`.
+
+       MODEL THUMBNAILS are managed automatically from your GitHub files.
+       You do not need to add image paths to USEFUL_LINKS for 3D models.
        An invalid/unavailable custom icon falls back to automatic lookup;
        if that also fails, the card keeps a generic link symbol.
 
@@ -638,13 +697,289 @@
       }
     }
 
+    /* =====================================================================
+       MODEL THUMBNAILS — AUTOMATIC + LAZY + LOCALLY CACHED
+
+       Files ending in STEP, STP, STL, or 3MF receive a thumbnail rendered
+       from their real geometry. We reuse the existing 3D model loaders.
+       Image files (PNG/JPG/WebP/GIF/SVG) display their image directly.
+       Everything else uses the standard document symbol.
+
+       LIMITS: Rendering many CAD files can be slow and uses GitHub API
+       requests. A single thumbnail is generated at once, only when it
+       scrolls close to view. Models larger than maxModelBytes use the
+       generic icon but can still be opened in Preview 3D.
+
+       Browser cache is IndexedDB, keyed by GitHub's content SHA. When you
+       replace a model in GitHub its SHA changes, and the thumbnail is
+       regenerated automatically. No thumbnails need to be committed.
+
+       EDIT HERE if you need to change thumbnail generation limits.
+       ===================================================================== */
+    const THUMBNAILS = {
+      enabled: true,
+      maxModelBytes: 24 * 1024 * 1024, // Prevent enormous models from freezing slower devices.
+      maxNewModelsPerVisit: 35,       // Protect GitHub's unauthenticated API rate limit.
+      width: 480,
+      height: 300
+    };
+    const thumbnailQueue = [];
+    const thumbnailSessionCache = new Map();
+    let thumbnailWorking = false;
+    let thumbnailNewModels = 0;
+    let thumbnailDbPromise = null;
+    const thumbnailObserver = 'IntersectionObserver' in window
+      ? new IntersectionObserver(records => {
+          records.forEach(record => {
+            if (!record.isIntersecting) return;
+            thumbnailObserver.unobserve(record.target);
+            enqueueThumbnail(record.target);
+          });
+        }, { rootMargin: '220px 0px' })
+      : null;
+
+    function imageFile(name) {
+      return /\.(png|jpe?g|webp|gif|svg)$/i.test(name);
+    }
+
+    function rawGitHubFileUrl(path) {
+      // The raw file host avoids downloading images through GitHub's API.
+      const encodedPath = path.split('/').map(encodeURIComponent).join('/');
+      return `https://raw.githubusercontent.com/${encodeURIComponent(CONFIG.owner)}/${encodeURIComponent(CONFIG.repo)}/${encodeURIComponent(CONFIG.branch)}/${encodedPath}`;
+    }
+
+    function setThumbnailImage(media, src) {
+      const img = document.createElement('img');
+      img.alt = '';
+      img.decoding = 'async';
+      img.loading = 'lazy';
+      img.addEventListener('load', () => {
+        if (!media.isConnected) return;
+        media.querySelector('.media-placeholder')?.remove();
+        media.querySelector('.media-caption')?.remove();
+      }, { once: true });
+      img.addEventListener('error', () => {
+        img.remove();
+        const caption = media.querySelector('.media-caption');
+        if (caption) caption.textContent = 'Preview unavailable';
+      }, { once: true });
+      img.src = src;
+      media.prepend(img);
+      media.classList.remove('is-loading');
+    }
+
+    function makeFileThumbnail(item) {
+      const media = document.createElement('div');
+      media.className = 'file-media';
+      const placeholder = document.createElement('span');
+      placeholder.className = 'media-placeholder';
+      placeholder.textContent = isPreviewable3D(item.name) ? '⬡' : '📄';
+      placeholder.setAttribute('aria-hidden', 'true');
+      const chip = document.createElement('span');
+      chip.className = 'media-chip';
+      chip.textContent = fileType(item.name);
+      media.append(placeholder, chip);
+
+      if (imageFile(item.name)) {
+        const caption = document.createElement('span');
+        caption.className = 'media-caption';
+        caption.textContent = 'Image preview';
+        media.append(caption);
+        setThumbnailImage(media, rawGitHubFileUrl(item.path));
+      } else if (isPreviewable3D(item.name)) {
+        // The thumbnail itself is also a Preview 3D shortcut.
+        media.classList.add('is-clickable');
+        media.tabIndex = 0;
+        media.setAttribute('role', 'button');
+        media.setAttribute('aria-label', `Preview ${item.name} in 3D`);
+        media.addEventListener('click', () => openModelPreview(item));
+        media.addEventListener('keydown', event => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openModelPreview(item);
+          }
+        });
+        const caption = document.createElement('span');
+        caption.className = 'media-caption';
+        const tooLarge = item.size > THUMBNAILS.maxModelBytes;
+        caption.textContent = tooLarge ? 'Preview 3D to inspect' : '3D model preview';
+        media.append(caption);
+        if (THUMBNAILS.enabled && !tooLarge && item.sha) {
+          media.classList.add('is-loading');
+          media._modelItem = item;
+          // Start only when the card comes near the visible portion of the page.
+          if (thumbnailObserver) thumbnailObserver.observe(media);
+          else requestAnimationFrame(() => enqueueThumbnail(media));
+        }
+      }
+      return media;
+    }
+
+    function openThumbnailDb() {
+      if (!('indexedDB' in window)) return Promise.resolve(null);
+      if (!thumbnailDbPromise) {
+        thumbnailDbPromise = new Promise(resolve => {
+          try {
+            const request = indexedDB.open('robs-repository-thumbnails', 1);
+            request.onupgradeneeded = () => request.result.createObjectStore('images');
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => resolve(null);
+            request.onblocked = () => resolve(null);
+          } catch { resolve(null); }
+        });
+      }
+      return thumbnailDbPromise;
+    }
+
+    async function readCachedThumbnail(sha) {
+      if (thumbnailSessionCache.has(sha)) return thumbnailSessionCache.get(sha);
+      const db = await openThumbnailDb();
+      if (!db) return null;
+      return new Promise(resolve => {
+        try {
+          const request = db.transaction('images', 'readonly').objectStore('images').get(sha);
+          request.onsuccess = () => resolve(request.result || null);
+          request.onerror = () => resolve(null);
+        } catch { resolve(null); }
+      });
+    }
+
+    async function saveCachedThumbnail(sha, dataUrl) {
+      thumbnailSessionCache.set(sha, dataUrl);
+      const db = await openThumbnailDb();
+      if (!db) return;
+      try { db.transaction('images', 'readwrite').objectStore('images').put(dataUrl, sha); }
+      catch { /* Full or blocked browser storage: thumbnails still work for this visit. */ }
+    }
+
+    function enqueueThumbnail(media) {
+      if (!media._modelItem || media._thumbQueued || !media.isConnected) return;
+      media._thumbQueued = true;
+      thumbnailQueue.push(media);
+      void processThumbnailQueue();
+    }
+
+    async function processThumbnailQueue() {
+      if (thumbnailWorking) return;
+      thumbnailWorking = true;
+      try {
+        while (thumbnailQueue.length) {
+          const media = thumbnailQueue.shift();
+          if (!media.isConnected) continue;
+          const item = media._modelItem;
+          try {
+            let image = await readCachedThumbnail(item.sha);
+            if (!image && thumbnailNewModels < THUMBNAILS.maxNewModelsPerVisit) {
+              thumbnailNewModels++;
+              image = await generateModelThumbnail(item);
+              if (image) await saveCachedThumbnail(item.sha, image);
+            }
+            if (image) setThumbnailImage(media, image);
+            else {
+              media.classList.remove('is-loading');
+              const caption = media.querySelector('.media-caption');
+              if (caption) caption.textContent = 'Open Preview 3D';
+            }
+          } catch (error) {
+            // A bad file or unavailable library should never break the site.
+            console.warn(`Thumbnail unavailable for ${item.name}:`, error);
+            media.classList.remove('is-loading');
+            const caption = media.querySelector('.media-caption');
+            if (caption) caption.textContent = 'Open Preview 3D';
+          }
+        }
+      } finally {
+        thumbnailWorking = false;
+      }
+    }
+
+    function disposeModelGroup(models) {
+      const geometries = new Set();
+      const materials = new Set();
+      models.traverse(object => {
+        if (object.geometry && !geometries.has(object.geometry)) {
+          geometries.add(object.geometry);
+          object.geometry.dispose();
+        }
+        if (object.material) for (const material of (Array.isArray(object.material) ? object.material : [object.material])) {
+          if (materials.has(material)) continue;
+          materials.add(material);
+          if (material.map) material.map.dispose();
+          material.dispose();
+        }
+      });
+    }
+
+    async function generateModelThumbnail(item) {
+      // Reuse the same tested file-fetching and parsers as the modal viewer.
+      // The loaders are lazy, so visitors looking only at links aren't affected.
+      const extension = fileType(item.name).toLowerCase();
+      const [bytes] = await Promise.all([
+        fetchGitHubFile(item),
+        extension === 'stl' ? getStlLoader() : extension === '3mf' ? getThreeMFLoader() : getCadEngine()
+      ]);
+      const result = extension === 'stl' ? await readStlModel(bytes, false)
+        : extension === '3mf' ? await readThreeMFModel(bytes, false)
+        : await readStepModel(bytes, false);
+      try { return renderModelThumbnail(result.models); }
+      finally { disposeModelGroup(result.models); }
+    }
+
+    function renderModelThumbnail(models) {
+      const THREE = window.THREE;
+      if (!models.children.length) return null;
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x1b2832);
+      scene.add(models);
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x526476, 1.6));
+      const keyLight = new THREE.DirectionalLight(0xffffff, 1.25);
+      keyLight.position.set(80, -105, 130);
+      scene.add(keyLight);
+      const rimLight = new THREE.DirectionalLight(0xe3c088, 0.8);
+      rimLight.position.set(-80, 70, 85);
+      scene.add(rimLight);
+
+      // Use a fixed camera angle so the gallery looks visually consistent.
+      const bounds = new THREE.Box3().setFromObject(models);
+      const center = bounds.getCenter(new THREE.Vector3());
+      const size = bounds.getSize(new THREE.Vector3());
+      const longest = Math.max(size.x, size.y, size.z, .001);
+      const camera = new THREE.PerspectiveCamera(38, THUMBNAILS.width / THUMBNAILS.height, 0.001, 1e8);
+      camera.up.set(0, 0, 1);
+      const distance = longest / (2 * Math.tan(38 * Math.PI / 360)) * 1.55;
+      camera.position.copy(center).add(new THREE.Vector3(distance * .8, -distance, distance * .73));
+      camera.lookAt(center);
+      camera.near = Math.max(distance / 10000, .001);
+      camera.far = Math.max(distance * 100, 10);
+      camera.updateProjectionMatrix();
+
+      // preserveDrawingBuffer permits a screenshot from the offscreen canvas.
+      const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      try {
+        renderer.setPixelRatio(1);
+        renderer.setSize(THUMBNAILS.width, THUMBNAILS.height, false);
+        renderer.render(scene, camera);
+        return renderer.domElement.toDataURL('image/webp', 0.78);
+      } finally {
+        renderer.dispose();
+        renderer.forceContextLoss?.();
+      }
+    }
+
     function addTile(item) {
       const article = document.createElement('article');
       article.className = 'tile';
 
-      const symbol = document.createElement('div');
-      symbol.className = 'symbol';
-      symbol.textContent = item.type === 'folder' ? '📁' : '📄';
+      // File thumbnails are automatic. Folder cards keep their 📁 symbol.
+      const symbol = item.type === 'folder'
+        ? document.createElement('div')
+        : makeFileThumbnail(item);
+      if (item.type === 'folder') {
+        symbol.className = 'symbol';
+        symbol.textContent = '📁';
+      } else {
+        article.classList.add('file-tile');
+      }
 
       const heading = document.createElement('h3');
       heading.textContent = item.name;
@@ -1055,9 +1390,9 @@
     }
 
     /* STEP files: OCCT triangulates the CAD surfaces for Three.js. */
-    async function readStepModel(bytes) {
+    async function readStepModel(bytes, showStatus = true) {
       const occt = await getCadEngine();
-      setPreviewMessage('Processing STEP geometry…');
+      if (showStatus) setPreviewMessage('Processing STEP geometry…');
       // Give the browser a chance to draw the status before blocking on CAD.
       await new Promise(resolve => setTimeout(resolve, 30));
       const result = occt.ReadStepFile(bytes, null);
@@ -1066,9 +1401,9 @@
     }
 
     /* STL files: mesh-only; works for both ASCII STL and binary STL. */
-    async function readStlModel(bytes) {
+    async function readStlModel(bytes, showStatus = true) {
       const Loader = await getStlLoader();
-      setPreviewMessage('Processing STL mesh…');
+      if (showStatus) setPreviewMessage('Processing STL mesh…');
       const THREE = window.THREE;
       // STLLoader.parse needs an ArrayBuffer, not a Uint8Array view.
       const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
@@ -1098,9 +1433,9 @@
        Slicer-specific settings (supports, print profiles, toolpaths) aren't
        necessarily renderable and are intentionally not interpreted here.
     */
-    async function readThreeMFModel(bytes) {
+    async function readThreeMFModel(bytes, showStatus = true) {
       const Loader = await getThreeMFLoader();
-      setPreviewMessage('Processing 3MF model…');
+      if (showStatus) setPreviewMessage('Processing 3MF model…');
       const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
       const models = new Loader().parse(buffer);
       if (!models || !models.isObject3D) throw new Error('The 3MF loader could not read this model.');
@@ -1197,6 +1532,8 @@
        The objects in USEFUL_LINKS are the source of truth. Each category or
        subcategory can contain `children` (more folders) and `links` (websites).
        No changes to this rendering code are necessary when you add entries.
+       Cards automatically display favicon, title, domain and description.
+       For a custom favicon use optional `favicon: 'https://...'`.
        ===================================================================== */
     const tabFiles = document.getElementById('tab-files');
     const tabLinks = document.getElementById('tab-links');
@@ -1313,18 +1650,44 @@
       const article = document.createElement('article');
       article.className = 'tile link-tile';
       const url = linkUrl(link.url);
-      const symbol = makeWebsiteFavicon(link, url);
+
+      // Website identity: favicon, name, and the real domain together.
+      const head = document.createElement('div');
+      head.className = 'link-head';
+      const favicon = makeWebsiteFavicon(link, url);
+      const headCopy = document.createElement('div');
+      headCopy.className = 'link-head-copy';
       const title = document.createElement('h3');
       title.textContent = link.title || 'Untitled link';
-      const description = document.createElement('p');
-      description.textContent = link.description || 'Visit this website';
-      const foot = document.createElement('div');
-      foot.className = 'foot';
-      const domain = document.createElement('span');
+      const domain = document.createElement('div');
       domain.className = 'link-domain';
       domain.textContent = url ? url.hostname.replace(/^www\./, '') : 'Invalid website URL';
+      headCopy.append(title, domain);
+      head.append(favicon, headCopy);
+
+      const description = document.createElement('p');
+      description.className = 'link-description';
+      description.textContent = link.description || 'Visit this website';
+
+      // Show the parent categories in search results, where it's useful to
+      // know whether a link lives in Tools, Models, etc.
+      if (folderNames.length) {
+        const location = document.createElement('div');
+        location.className = 'link-location';
+        location.textContent = '⌁ ' + folderNames.join('  /  ');
+        article.append(head, description, location);
+      } else {
+        article.append(head, description);
+      }
+
+      const foot = document.createElement('div');
+      foot.className = 'foot';
+      const kind = document.createElement('span');
+      kind.className = 'link-kind';
+      kind.textContent = 'WEBSITE';
       const action = document.createElement('a');
-      action.textContent = 'Open website ↗';
+      action.className = 'link-visit';
+      action.textContent = 'Visit website ↗';
       if (url) {
         action.href = url.href;
         action.target = '_blank';
@@ -1335,14 +1698,7 @@
         action.setAttribute('aria-disabled', 'true');
         action.title = 'Provide a valid https:// or http:// link in USEFUL_LINKS';
       }
-      foot.append(domain, action);
-      article.append(symbol, title, description);
-      if (folderNames.length) {
-        const location = document.createElement('div');
-        location.className = 'link-location';
-        location.textContent = folderNames.join(' / ');
-        article.append(location);
-      }
+      foot.append(kind, action);
       article.append(foot);
       return article;
     }
