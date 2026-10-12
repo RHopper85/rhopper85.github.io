@@ -157,6 +157,7 @@
       font-size: 12px; color: #c2a36d; }
     .link-tile .foot { margin-top: auto; }
     .links-description { color: var(--muted); margin: 21px 0 0; font-size: 14px; }
+    .link-location { font-size: 11px; color: var(--muted); margin: -6px 0 14px; overflow-wrap: anywhere; }
 
     .section { margin: 0 0 18px; color: var(--gold); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; }
     .empty { padding: 40px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); }
@@ -247,54 +248,116 @@
 
   <script>
     /* =====================================================================
-       EDIT HERE: USEFUL LINKS — MANUALLY MANAGED, NOT READ FROM GITHUB
+       EDIT HERE: USEFUL LINKS — CATEGORIES, SUBCATEGORIES & WEBSITES
 
-       Useful Links tab is active, but starts EMPTY on purpose.
-       All examples below are commented out and will not appear on the site.
+       The list below controls ONLY the Useful Links tab.
+       GitHub files/folders continue to populate automatically as before.
 
-       TO ADD YOUR FIRST LINKS:
-       1. Remove the opening and closing comment markers enclosing the sample
-          categories in USEFUL_LINKS (not the markers around this guide).
-       2. Replace the sample names, descriptions and URLs with your own.
-       3. To add a link, copy another { title, description, url } object inside
-          a category's 'links' array, remembering to separate entries with commas.
-       4. To add a category, copy the entire { name, description, links } object,
-          also separated by a comma.
-       5. Commit index.html. The Useful Links tab updates when the page reloads.
+       HOW TO ADD A WEBSITE:
+       Add an entry to any folder's `links: [ ... ]` list:
+         { title: 'Site Name', description: 'What it does', url: 'https://...' }
 
-       Links open in a new tab. Only http:// and https:// URLs are accepted.
-       Your GitHub folders/files STILL populate automatically and need no edits.
+       HOW TO ADD A SUBCATEGORY:
+       Add another folder object to any folder's `children: [ ... ]` list:
+         { name: 'Subcategory', description: 'Optional', children: [], links: [] }
+
+       HOW TO ADD A TOP-LEVEL CATEGORY:
+       Add another folder object directly inside USEFUL_LINKS.
+
+       You can nest `children` as deeply as you like. All folders open in
+       place, with clickable breadcrumbs and search across every level.
+       Remember to put commas BETWEEN objects in arrays. Example templates
+       at the end are commented out so they do not appear until enabled.
        ===================================================================== */
     const USEFUL_LINKS = [
-      /* // REMOVE THIS OPENING BLOCK COMMENT TO ENABLE EXAMPLES
       {
         name: '3D Printing',
-        description: 'Models, slicers, and 3D printing communities',
-        links: [
+        description: 'Useful 3D printing tools and model libraries',
+        children: [
           {
-            title: 'Printables',
-            description: 'Find community-created 3D printable models.',
-            url: 'https://www.printables.com/'
+            name: 'Tools',
+            description: 'Converters, filament profiles, and handy utilities',
+            links: [
+              {
+                title: 'STL to STEP Converter',
+                description: 'Turn an STL into a STEP file',
+                url: 'https://paramability.app/stl-to-step'
+              },
+              {
+                title: '3D Filament Profiles',
+                description: '3D filament profiles and settings',
+                url: 'https://3dfilamentprofiles.com/'
+              }
+              // ADD MORE TOOL LINKS HERE (put a comma after the previous link).
+            ]
           },
           {
-            title: 'Thingiverse',
-            description: 'Browse and share 3D printing designs.',
-            url: 'https://www.thingiverse.com/'
+            name: 'Models',
+            description: 'Find and download 3D-printable models',
+            links: [
+              {
+                title: 'Cults3D 💲',
+                description: 'Browse Paid community-created 3D models',
+                url: 'https://www.cults3d.com/'
+              },
+              {
+                title: 'Thingiverse',
+                description: 'Browse community-created 3D models',
+                url: 'https://www.thingiverse.com/'
+              },
+              {
+                title: 'Printables',
+                description: 'Browse and share printable 3D models',
+                url: 'https://www.printables.com/'
+              }
+              // ADD MORE MODEL LINKS HERE.
+            ]
           }
+          // ADD MORE 3D PRINTING SUBCATEGORIES HERE (start with a comma).
         ]
       },
-      {
-        name: 'Tools & Software',
-        description: 'Handy utilities and online applications',
-        links: [
+      /*{
+        name: 'Useful Websites',
+        description: 'General websites and online resources',
+        children: [
           {
-            title: 'Tinkercad',
-            description: 'Easy 3D design in your browser.',
-            url: 'https://www.tinkercad.com/'
+            name: 'Search Engines',
+            description: 'Find information on the web',
+            links: [
+              {
+                title: 'Google',
+                description: 'Google search engine',
+                url: 'https://www.google.com/'
+              }
+              // ADD MORE SEARCH ENGINES HERE.
+            ]
+          }
+        ]
+      }*/
+
+      /* ================================================================
+         FUTURE TOP-LEVEL CATEGORY TEMPLATE — CURRENTLY COMMENTED OUT
+         To enable: copy the object below outside these comment markers
+         and separate it from the previous category with a comma.
+
+      ,{
+        name: 'Another Category',
+        description: 'Describe this category',
+        children: [
+          {
+            name: 'New Subcategory',
+            description: 'Describe the subcategory',
+            links: [
+              {
+                title: 'New Website',
+                description: 'Why this link is useful',
+                url: 'https://example.com/'
+              }
+            ]
           }
         ]
       }
-      // REMOVE THIS CLOSING BLOCK COMMENT TO ENABLE EXAMPLES */
+         END FUTURE CATEGORY TEMPLATE ==================================== */
     ];
     /* ===== END OF USEFUL LINKS EDITING SECTION =========================== */
 
@@ -1099,11 +1162,11 @@
     });
 
     /* =====================================================================
-       USEFUL LINKS — TAB CONTROLS AND LINK/CATEGORY CARD RENDERING
+       USEFUL LINKS — NESTED FOLDER NAVIGATION AND LINK CARDS
 
-       You normally DO NOT need to edit this logic.
-       Edit USEFUL_LINKS near the beginning of <script> instead.
-       File browsing, downloads, and 3D previewing remain independent.
+       The objects in USEFUL_LINKS are the source of truth. Each category or
+       subcategory can contain `children` (more folders) and `links` (websites).
+       No changes to this rendering code are necessary when you add entries.
        ===================================================================== */
     const tabFiles = document.getElementById('tab-files');
     const tabLinks = document.getElementById('tab-links');
@@ -1112,7 +1175,10 @@
     const linksSearch = document.getElementById('links-search');
     const linksBreadcrumbs = document.getElementById('links-breadcrumbs');
     const linksContent = document.getElementById('links-content');
-    let selectedLinkCategory = null;
+
+    // Array of folder indexes. Unlike names, indexes remain unique if you
+    // create two folders with the same visible name.
+    let selectedLinkPath = [];
 
     function setActiveTab(which, updateHash = true) {
       const isLinks = which === 'links';
@@ -1123,15 +1189,31 @@
       tabFiles.tabIndex = isLinks ? -1 : 0;
       tabLinks.tabIndex = isLinks ? 0 : -1;
       if (isLinks) drawUsefulLinks();
-      // Optional direct link to this section (e.g. https://.../#links).
       if (updateHash) history.replaceState(null, '', isLinks ? '#links' : location.pathname + location.search);
     }
 
-    function addLinkBreadcrumb(name, callback) {
+    // Find the current nested category by its index path. At the root, we
+    // return a temporary container with the top-level categories in children.
+    function currentLinkFolder() {
+      let current = { children: USEFUL_LINKS, links: [] };
+      for (const index of selectedLinkPath) {
+        current = (current.children || [])[index];
+        if (!current) { selectedLinkPath = []; return { children: USEFUL_LINKS, links: [] }; }
+      }
+      return current;
+    }
+
+    function browseLinkFolder(path) {
+      selectedLinkPath = [...path];
+      linksSearch.value = '';
+      drawUsefulLinks();
+    }
+
+    function addLinkBreadcrumb(name, path) {
       const button = document.createElement('button');
       button.type = 'button';
       button.textContent = name;
-      button.addEventListener('click', callback);
+      button.addEventListener('click', () => browseLinkFolder(path));
       linksBreadcrumbs.append(button);
     }
 
@@ -1142,7 +1224,7 @@
       } catch { return null; }
     }
 
-    function makeLinkCard(link) {
+    function makeLinkCard(link, folderNames = []) {
       const article = document.createElement('article');
       article.className = 'tile link-tile';
       const symbol = document.createElement('div');
@@ -1171,11 +1253,26 @@
         action.title = 'Provide a valid https:// or http:// link in USEFUL_LINKS';
       }
       foot.append(domain, action);
-      article.append(symbol, title, description, foot);
+      article.append(symbol, title, description);
+      if (folderNames.length) {
+        const location = document.createElement('div');
+        location.className = 'link-location';
+        location.textContent = folderNames.join(' / ');
+        article.append(location);
+      }
+      article.append(foot);
       return article;
     }
 
-    function makeLinkCategoryCard(category) {
+    // Calculate the total number of actual links at any depth, so folder
+    // cards show useful counts rather than only their immediate children.
+    function countNestedLinks(category) {
+      let count = (category.links || []).length;
+      for (const child of category.children || []) count += countNestedLinks(child);
+      return count;
+    }
+
+    function makeLinkCategoryCard(category, path) {
       const article = document.createElement('article');
       article.className = 'tile link-collection';
       const symbol = document.createElement('div');
@@ -1188,71 +1285,86 @@
       const foot = document.createElement('div');
       foot.className = 'foot';
       const count = document.createElement('span');
-      const countLinks = Array.isArray(category.links) ? category.links.length : 0;
-      count.textContent = `${countLinks} ${countLinks === 1 ? 'link' : 'links'}`;
+      const total = countNestedLinks(category);
+      count.textContent = `${total} ${total === 1 ? 'link' : 'links'}`;
       const open = document.createElement('button');
       open.type = 'button';
       open.textContent = 'Open folder →';
-      open.addEventListener('click', () => {
-        selectedLinkCategory = category.name;
-        linksSearch.value = '';
-        drawUsefulLinks();
-      });
+      open.addEventListener('click', () => browseLinkFolder(path));
       foot.append(count, open);
       article.append(symbol, title, description, foot);
       return article;
+    }
+
+    // Search all folders and websites, including their parent category names.
+    // Example: searching "3D Printing" will find websites in Tools and Models.
+    function findUsefulLinks(query) {
+      const matches = [];
+      function visit(category, path, ancestors) {
+        const names = [...ancestors, category.name];
+        const folderText = `${names.join(' ')} ${category.description || ''}`.toLocaleLowerCase();
+        const folderMatches = folderText.includes(query);
+        for (const link of category.links || []) {
+          const linkText = `${link.title || ''} ${link.description || ''} ${link.url || ''}`.toLocaleLowerCase();
+          if (folderMatches || linkText.includes(query)) matches.push({ type: 'link', link, names });
+        }
+        // Include matching empty categories in search results, too.
+        if (folderMatches && countNestedLinks(category) === 0) matches.push({ type: 'folder', category, path });
+        (category.children || []).forEach((child, i) => visit(child, [...path, i], names));
+      }
+      USEFUL_LINKS.forEach((category, i) => visit(category, [i], []));
+      return matches;
     }
 
     function drawUsefulLinks() {
       const query = linksSearch.value.trim().toLocaleLowerCase();
       linksContent.replaceChildren();
       linksBreadcrumbs.replaceChildren();
-      addLinkBreadcrumb('Useful Links', () => {
-        selectedLinkCategory = null;
-        linksSearch.value = '';
-        drawUsefulLinks();
-      });
-      if (selectedLinkCategory && !query) {
-        linksBreadcrumbs.append(' / ');
-        addLinkBreadcrumb(selectedLinkCategory, () => {});
-      }
-      if (query) linksBreadcrumbs.append(' / Search results');
+      addLinkBreadcrumb('Useful Links', []);
 
-      // Category names and link names/descriptions/URLs are all searchable.
+      let current = { children: USEFUL_LINKS, links: [] };
+      if (!query) {
+        // Build clickable breadcrumbs for every nested category depth.
+        let children = USEFUL_LINKS;
+        selectedLinkPath.forEach((index, depth) => {
+          const category = children[index];
+          if (!category) return;
+          linksBreadcrumbs.append(' / ');
+          addLinkBreadcrumb(category.name, selectedLinkPath.slice(0, depth + 1));
+          children = category.children || [];
+        });
+        current = currentLinkFolder();
+      } else {
+        linksBreadcrumbs.append(' / Search results');
+      }
+
       const entries = query
-        ? USEFUL_LINKS.flatMap(category => {
-            const matchesCategory = `${category.name} ${category.description || ''}`.toLocaleLowerCase().includes(query);
-            return (category.links || [])
-              .filter(link => matchesCategory || `${link.title} ${link.description || ''} ${link.url}`.toLocaleLowerCase().includes(query))
-              .map(link => ({ link, category: category.name }));
-          })
-        : selectedLinkCategory
-          ? (USEFUL_LINKS.find(category => category.name === selectedLinkCategory)?.links || [])
-              .map(link => ({ link, category: selectedLinkCategory }))
-          : USEFUL_LINKS;
+        ? findUsefulLinks(query)
+        : [
+            ...(current.children || []).map((category, i) => ({ type: 'folder', category, path: [...selectedLinkPath, i] })),
+            ...(current.links || []).map(link => ({ type: 'link', link, names: [] }))
+          ];
 
       if (!entries.length) {
         const empty = document.createElement('div');
         empty.className = 'empty';
-        if (query) empty.textContent = 'No matching links. Try another search.';
-        else if (!USEFUL_LINKS.length) {
-          const heading = document.createElement('strong');
-          heading.textContent = 'The links collection is ready.';
-          empty.append(heading, document.createElement('br'),
-            'To add your first category or link, edit the commented USEFUL_LINKS section in index.html and commit the file to GitHub.');
-        } else empty.textContent = 'Nothing in this category yet. Add a link in the USEFUL_LINKS section.';
+        empty.textContent = query
+          ? 'No matching links or categories. Try another search.'
+          : 'Nothing in this folder yet. Add a subcategory or website in the USEFUL_LINKS section.';
         linksContent.append(empty);
         return;
       }
 
       const title = document.createElement('div');
       title.className = 'section';
-      title.textContent = `${query ? 'Search results' : selectedLinkCategory ? selectedLinkCategory : 'Browse link collections'} · ${entries.length} ${entries.length === 1 ? 'item' : 'items'}`;
+      title.textContent = `${query ? 'Search results' : selectedLinkPath.length ? 'Inside this folder' : 'Browse link collections'} · ${entries.length} ${entries.length === 1 ? 'item' : 'items'}`;
       const grid = document.createElement('div');
       grid.className = 'grid';
-      for (const entry of entries) grid.append(query || selectedLinkCategory
-        ? makeLinkCard(entry.link)
-        : makeLinkCategoryCard(entry));
+      for (const entry of entries) {
+        grid.append(entry.type === 'folder'
+          ? makeLinkCategoryCard(entry.category, entry.path)
+          : makeLinkCard(entry.link, query ? entry.names : []));
+      }
       linksContent.append(title, grid);
     }
 
