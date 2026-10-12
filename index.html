@@ -139,6 +139,25 @@
     @media(max-width:600px) { .viewer-header { padding: 12px; } .viewer-toolbar { padding: 10px 12px; }
       .viewer-toolbar .viewer-download { margin-left: 0; } }
 
+    /* ================================================================
+       PAGE NAVIGATION — Switch between the GitHub file library and links.
+       Useful Links are maintained manually in USEFUL_LINKS below.
+       ================================================================ */
+    .page-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 9px;
+      margin: 34px 0 0; padding-bottom: 17px; border-bottom: 1px solid var(--line); }
+    .page-tab { display: inline-flex; align-items: center; gap: 10px;
+      border: 1px solid var(--line); border-radius: 10px; padding: 12px 18px;
+      color: var(--muted); background: #111820; transition: background .15s, border-color .15s; }
+    .page-tab:hover { background: var(--panel2); color: var(--text); }
+    .page-tab[aria-selected="true"] { color: var(--gold); background: #302a20; border-color: #8c7344; }
+    .page-tab .tab-icon { font-size: 18px; }
+    .page-panel[hidden] { display: none !important; }
+    .link-collection .symbol { font-size: 28px; }
+    .link-tile .link-domain { display: inline-block; margin-top: 2px; overflow-wrap: anywhere;
+      font-size: 12px; color: #c2a36d; }
+    .link-tile .foot { margin-top: auto; }
+    .links-description { color: var(--muted); margin: 21px 0 0; font-size: 14px; }
+
     .section { margin: 0 0 18px; color: var(--gold); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; }
     .empty { padding: 40px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); }
     .empty strong { color: var(--text); }
@@ -163,13 +182,41 @@
     <div class="eyebrow">Welcome to the vault</div>
     <h1>Rob's <span>Repository.</span></h1>
     <p class="intro">A curated collection of things I've made, collected, and shared. Explore the folders, find what you need, and take it with you.</p>
-    <div class="toolbar">
-      <input id="search" type="search" placeholder="Search the entire repository…" aria-label="Search files and folders">
-      <button id="refresh" class="refresh" type="button" title="Check GitHub for the latest files">↻ Refresh files</button>
-    </div>
-    <nav class="crumb" id="breadcrumbs" aria-label="Folder path"></nav>
-    <div id="content" aria-live="polite"><div class="empty">Loading folders from GitHub…</div></div>
-    <div id="status" class="status" role="status" aria-live="polite"></div>
+    <!-- ================================================================
+         MAIN TABS — Both sections share the same single HTML page.
+         Useful Links are added in the USEFUL_LINKS JavaScript section.
+         ================================================================ -->
+    <nav class="page-tabs" role="tablist" aria-label="Repository sections">
+      <button type="button" id="tab-files" class="page-tab" role="tab"
+              aria-selected="true" aria-controls="panel-files" tabindex="0">
+        <span class="tab-icon" aria-hidden="true">📁</span> File Repository
+      </button>
+      <button type="button" id="tab-links" class="page-tab" role="tab"
+              aria-selected="false" aria-controls="panel-links" tabindex="-1">
+        <span class="tab-icon" aria-hidden="true">🔗</span> Useful Links
+      </button>
+    </nav>
+
+    <!-- Existing automatic GitHub repository browser — unchanged. -->
+    <section id="panel-files" class="page-panel" role="tabpanel" aria-labelledby="tab-files">
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Search the entire repository…" aria-label="Search files and folders">
+        <button id="refresh" class="refresh" type="button" title="Check GitHub for the latest files">↻ Refresh files</button>
+      </div>
+      <nav class="crumb" id="breadcrumbs" aria-label="Folder path"></nav>
+      <div id="content" aria-live="polite"><div class="empty">Loading folders from GitHub…</div></div>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+    </section>
+
+    <!-- Useful Links — displayed separately from your downloadable files. -->
+    <section id="panel-links" class="page-panel" role="tabpanel" aria-labelledby="tab-links" hidden>
+      <p class="links-description">A hand-picked collection of websites, tools, and helpful resources.</p>
+      <div class="toolbar">
+        <input id="links-search" type="search" placeholder="Search useful links…" aria-label="Search useful links">
+      </div>
+      <nav class="crumb" id="links-breadcrumbs" aria-label="Link category path"></nav>
+      <div id="links-content" aria-live="polite"></div>
+    </section>
   </main>
   <footer>✦ Rob's Repository · Crafted for the curious.</footer>
 
@@ -199,6 +246,58 @@
   </dialog>
 
   <script>
+    /* =====================================================================
+       EDIT HERE: USEFUL LINKS — MANUALLY MANAGED, NOT READ FROM GITHUB
+
+       Useful Links tab is active, but starts EMPTY on purpose.
+       All examples below are commented out and will not appear on the site.
+
+       TO ADD YOUR FIRST LINKS:
+       1. Remove the opening and closing comment markers enclosing the sample
+          categories in USEFUL_LINKS (not the markers around this guide).
+       2. Replace the sample names, descriptions and URLs with your own.
+       3. To add a link, copy another { title, description, url } object inside
+          a category's 'links' array, remembering to separate entries with commas.
+       4. To add a category, copy the entire { name, description, links } object,
+          also separated by a comma.
+       5. Commit index.html. The Useful Links tab updates when the page reloads.
+
+       Links open in a new tab. Only http:// and https:// URLs are accepted.
+       Your GitHub folders/files STILL populate automatically and need no edits.
+       ===================================================================== */
+    const USEFUL_LINKS = [
+      /* // REMOVE THIS OPENING BLOCK COMMENT TO ENABLE EXAMPLES
+      {
+        name: '3D Printing',
+        description: 'Models, slicers, and 3D printing communities',
+        links: [
+          {
+            title: 'Printables',
+            description: 'Find community-created 3D printable models.',
+            url: 'https://www.printables.com/'
+          },
+          {
+            title: 'Thingiverse',
+            description: 'Browse and share 3D printing designs.',
+            url: 'https://www.thingiverse.com/'
+          }
+        ]
+      },
+      {
+        name: 'Tools & Software',
+        description: 'Handy utilities and online applications',
+        links: [
+          {
+            title: 'Tinkercad',
+            description: 'Easy 3D design in your browser.',
+            url: 'https://www.tinkercad.com/'
+          }
+        ]
+      }
+      // REMOVE THIS CLOSING BLOCK COMMENT TO ENABLE EXAMPLES */
+    ];
+    /* ===== END OF USEFUL LINKS EDITING SECTION =========================== */
+
     /* =====================================================================
        ROB'S REPOSITORY — AUTOMATIC GITHUB FILE LIBRARY
 
@@ -998,6 +1097,179 @@
       viewerEdgesButton.textContent = `Edges: ${activeViewer.edgesVisible ? 'On' : 'Off'}`;
       viewerEdgesButton.setAttribute('aria-pressed', String(activeViewer.edgesVisible));
     });
+
+    /* =====================================================================
+       USEFUL LINKS — TAB CONTROLS AND LINK/CATEGORY CARD RENDERING
+
+       You normally DO NOT need to edit this logic.
+       Edit USEFUL_LINKS near the beginning of <script> instead.
+       File browsing, downloads, and 3D previewing remain independent.
+       ===================================================================== */
+    const tabFiles = document.getElementById('tab-files');
+    const tabLinks = document.getElementById('tab-links');
+    const panelFiles = document.getElementById('panel-files');
+    const panelLinks = document.getElementById('panel-links');
+    const linksSearch = document.getElementById('links-search');
+    const linksBreadcrumbs = document.getElementById('links-breadcrumbs');
+    const linksContent = document.getElementById('links-content');
+    let selectedLinkCategory = null;
+
+    function setActiveTab(which, updateHash = true) {
+      const isLinks = which === 'links';
+      panelFiles.hidden = isLinks;
+      panelLinks.hidden = !isLinks;
+      tabFiles.setAttribute('aria-selected', String(!isLinks));
+      tabLinks.setAttribute('aria-selected', String(isLinks));
+      tabFiles.tabIndex = isLinks ? -1 : 0;
+      tabLinks.tabIndex = isLinks ? 0 : -1;
+      if (isLinks) drawUsefulLinks();
+      // Optional direct link to this section (e.g. https://.../#links).
+      if (updateHash) history.replaceState(null, '', isLinks ? '#links' : location.pathname + location.search);
+    }
+
+    function addLinkBreadcrumb(name, callback) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = name;
+      button.addEventListener('click', callback);
+      linksBreadcrumbs.append(button);
+    }
+
+    function linkUrl(value) {
+      try {
+        const parsed = new URL(value);
+        return ['http:', 'https:'].includes(parsed.protocol) ? parsed : null;
+      } catch { return null; }
+    }
+
+    function makeLinkCard(link) {
+      const article = document.createElement('article');
+      article.className = 'tile link-tile';
+      const symbol = document.createElement('div');
+      symbol.className = 'symbol';
+      symbol.textContent = '🔗';
+      const title = document.createElement('h3');
+      title.textContent = link.title || 'Untitled link';
+      const description = document.createElement('p');
+      description.textContent = link.description || 'Visit this website';
+      const foot = document.createElement('div');
+      foot.className = 'foot';
+      const domain = document.createElement('span');
+      domain.className = 'link-domain';
+      const url = linkUrl(link.url);
+      domain.textContent = url ? url.hostname.replace(/^www\./, '') : 'Invalid website URL';
+      const action = document.createElement('a');
+      action.textContent = 'Open website ↗';
+      if (url) {
+        action.href = url.href;
+        action.target = '_blank';
+        action.rel = 'noopener noreferrer';
+        action.setAttribute('aria-label', `Open ${link.title || 'website'} in a new tab`);
+      } else {
+        action.removeAttribute('href');
+        action.setAttribute('aria-disabled', 'true');
+        action.title = 'Provide a valid https:// or http:// link in USEFUL_LINKS';
+      }
+      foot.append(domain, action);
+      article.append(symbol, title, description, foot);
+      return article;
+    }
+
+    function makeLinkCategoryCard(category) {
+      const article = document.createElement('article');
+      article.className = 'tile link-collection';
+      const symbol = document.createElement('div');
+      symbol.className = 'symbol';
+      symbol.textContent = '📁';
+      const title = document.createElement('h3');
+      title.textContent = category.name;
+      const description = document.createElement('p');
+      description.textContent = category.description || 'Browse useful links';
+      const foot = document.createElement('div');
+      foot.className = 'foot';
+      const count = document.createElement('span');
+      const countLinks = Array.isArray(category.links) ? category.links.length : 0;
+      count.textContent = `${countLinks} ${countLinks === 1 ? 'link' : 'links'}`;
+      const open = document.createElement('button');
+      open.type = 'button';
+      open.textContent = 'Open folder →';
+      open.addEventListener('click', () => {
+        selectedLinkCategory = category.name;
+        linksSearch.value = '';
+        drawUsefulLinks();
+      });
+      foot.append(count, open);
+      article.append(symbol, title, description, foot);
+      return article;
+    }
+
+    function drawUsefulLinks() {
+      const query = linksSearch.value.trim().toLocaleLowerCase();
+      linksContent.replaceChildren();
+      linksBreadcrumbs.replaceChildren();
+      addLinkBreadcrumb('Useful Links', () => {
+        selectedLinkCategory = null;
+        linksSearch.value = '';
+        drawUsefulLinks();
+      });
+      if (selectedLinkCategory && !query) {
+        linksBreadcrumbs.append(' / ');
+        addLinkBreadcrumb(selectedLinkCategory, () => {});
+      }
+      if (query) linksBreadcrumbs.append(' / Search results');
+
+      // Category names and link names/descriptions/URLs are all searchable.
+      const entries = query
+        ? USEFUL_LINKS.flatMap(category => {
+            const matchesCategory = `${category.name} ${category.description || ''}`.toLocaleLowerCase().includes(query);
+            return (category.links || [])
+              .filter(link => matchesCategory || `${link.title} ${link.description || ''} ${link.url}`.toLocaleLowerCase().includes(query))
+              .map(link => ({ link, category: category.name }));
+          })
+        : selectedLinkCategory
+          ? (USEFUL_LINKS.find(category => category.name === selectedLinkCategory)?.links || [])
+              .map(link => ({ link, category: selectedLinkCategory }))
+          : USEFUL_LINKS;
+
+      if (!entries.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        if (query) empty.textContent = 'No matching links. Try another search.';
+        else if (!USEFUL_LINKS.length) {
+          const heading = document.createElement('strong');
+          heading.textContent = 'The links collection is ready.';
+          empty.append(heading, document.createElement('br'),
+            'To add your first category or link, edit the commented USEFUL_LINKS section in index.html and commit the file to GitHub.');
+        } else empty.textContent = 'Nothing in this category yet. Add a link in the USEFUL_LINKS section.';
+        linksContent.append(empty);
+        return;
+      }
+
+      const title = document.createElement('div');
+      title.className = 'section';
+      title.textContent = `${query ? 'Search results' : selectedLinkCategory ? selectedLinkCategory : 'Browse link collections'} · ${entries.length} ${entries.length === 1 ? 'item' : 'items'}`;
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+      for (const entry of entries) grid.append(query || selectedLinkCategory
+        ? makeLinkCard(entry.link)
+        : makeLinkCategoryCard(entry));
+      linksContent.append(title, grid);
+    }
+
+    tabFiles.addEventListener('click', () => setActiveTab('files'));
+    tabLinks.addEventListener('click', () => setActiveTab('links'));
+    // Arrow-key navigation for keyboard users.
+    for (const tab of [tabFiles, tabLinks]) tab.addEventListener('keydown', event => {
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        event.preventDefault();
+        const next = tab === tabFiles ? tabLinks : tabFiles;
+        next.focus();
+        setActiveTab(next === tabLinks ? 'links' : 'files');
+      }
+    });
+    linksSearch.addEventListener('input', drawUsefulLinks);
+    drawUsefulLinks();
+    if (location.hash === '#links') setActiveTab('links', false);
 
     search.addEventListener('input', draw);
     refreshButton.addEventListener('click', loadRepository);
