@@ -153,6 +153,22 @@
     .page-tab .tab-icon { font-size: 18px; }
     .page-panel[hidden] { display: none !important; }
     .link-collection .symbol { font-size: 28px; }
+    /* ================================================================
+       USEFUL LINKS — WEBSITE FAVICONS
+       Website logos are automatically requested from Google's favicon
+       service. You can override any logo using `favicon` in USEFUL_LINKS.
+       If an icon cannot be loaded, the original link symbol appears.
+       ================================================================ */
+    .link-favicon {
+      width: 54px; height: 54px; flex: none;
+      display: grid; place-items: center;
+      border: 1px solid #66543a; border-radius: 13px;
+      background: linear-gradient(145deg, #30343a, #1a242c);
+      box-shadow: inset 0 1px 0 #ffffff0c;
+    }
+    .link-favicon img { display: block; width: 36px; height: 36px; object-fit: contain; }
+    .link-favicon img[hidden] { display: none; }
+    .link-favicon .favicon-fallback { font-size: 27px; line-height: 1; }
     .link-tile .link-domain { display: inline-block; margin-top: 2px; overflow-wrap: anywhere;
       font-size: 12px; color: #c2a36d; }
     .link-tile .foot { margin-top: auto; }
@@ -257,6 +273,15 @@
        Add an entry to any folder's `links: [ ... ]` list:
          { title: 'Site Name', description: 'What it does', url: 'https://...' }
 
+       WEBSITE FAVICONS (AUTOMATIC):
+       Every website card automatically shows its favicon (website logo).
+       You do NOT need to edit any existing link entries to enable this.
+       If a website displays the wrong icon, optionally add a custom URL:
+         favicon: 'https://example.com/my-icon.png'
+       Add a comma after the url field before adding `favicon`.
+       An invalid/unavailable custom icon falls back to automatic lookup;
+       if that also fails, the card keeps a generic link symbol.
+
        HOW TO ADD A SUBCATEGORY:
        Add another folder object to any folder's `children: [ ... ]` list:
          { name: 'Subcategory', description: 'Optional', children: [], links: [] }
@@ -292,13 +317,18 @@
             ]
           },
           {
-            name: 'Models',
+            name: 'Printable Models',
             description: 'Find and download 3D-printable models',
             links: [
               {
                 title: 'Cults3D 💲',
                 description: 'Browse Paid community-created 3D models',
                 url: 'https://www.cults3d.com/'
+              },
+              {
+                title: 'Makerworld',
+                description: 'Browse community-created 3D models specifically for BambuLabs Printers',
+                url: 'https://makerworld.com/'
               },
               {
                 title: 'Thingiverse',
@@ -1224,12 +1254,66 @@
       } catch { return null; }
     }
 
+    /* =====================================================================
+       USEFUL LINKS — AUTOMATIC FAVICON LOADING
+
+       The site's hostname is used to request its favicon from Google's
+       public favicon endpoint. No API key or separate file is needed.
+       Icons are loaded lazily, so large link collections stay responsive.
+
+       OPTIONAL OVERRIDE in a USEFUL_LINKS entry:
+         url: 'https://example.com/',
+         favicon: 'https://example.com/custom-icon.png'
+
+       If a custom icon fails, the code retries the automatic icon; if both
+       fail, visitors see the original 🔗 symbol instead of a broken image.
+       ===================================================================== */
+    function makeWebsiteFavicon(link, siteUrl) {
+      const frame = document.createElement('div');
+      frame.className = 'link-favicon';
+
+      // Visible immediately, and stays visible when an icon cannot load.
+      const fallback = document.createElement('span');
+      fallback.className = 'favicon-fallback';
+      fallback.textContent = '🔗';
+      fallback.setAttribute('aria-hidden', 'true');
+      frame.append(fallback);
+
+      if (!siteUrl) return frame;
+
+      const automaticUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(siteUrl.hostname)}&sz=64`;
+      const customUrl = linkUrl(link.favicon || ''); // HTTP(S) overrides only.
+      const image = document.createElement('img');
+      image.alt = ''; // The website title already identifies the card.
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      image.referrerPolicy = 'no-referrer';
+      image.hidden = true;
+
+      // Never leave the card displaying a broken <img> icon.
+      image.addEventListener('load', () => {
+        image.hidden = false;
+        fallback.hidden = true;
+      });
+      image.addEventListener('error', () => {
+        if (customUrl && image.src !== automaticUrl) {
+          image.src = automaticUrl; // Retry with the automatic favicon.
+        } else {
+          image.hidden = true;
+          fallback.hidden = false;
+        }
+      });
+
+      frame.append(image);
+      image.src = customUrl ? customUrl.href : automaticUrl;
+      return frame;
+    }
+
     function makeLinkCard(link, folderNames = []) {
       const article = document.createElement('article');
       article.className = 'tile link-tile';
-      const symbol = document.createElement('div');
-      symbol.className = 'symbol';
-      symbol.textContent = '🔗';
+      const url = linkUrl(link.url);
+      const symbol = makeWebsiteFavicon(link, url);
       const title = document.createElement('h3');
       title.textContent = link.title || 'Untitled link';
       const description = document.createElement('p');
@@ -1238,7 +1322,6 @@
       foot.className = 'foot';
       const domain = document.createElement('span');
       domain.className = 'link-domain';
-      const url = linkUrl(link.url);
       domain.textContent = url ? url.hostname.replace(/^www\./, '') : 'Invalid website URL';
       const action = document.createElement('a');
       action.textContent = 'Open website ↗';
