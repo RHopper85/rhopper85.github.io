@@ -33,6 +33,14 @@
 .header-layout .iconbtn.is-hidden{color:#8eabff;background:#28344b}
 @media(max-width:900px){.viewport:not(.palette-closed){grid-template-rows:43px minmax(0,1fr) minmax(105px,122px)}}
 @media(max-width:650px){.viewport:not(.palette-closed){grid-template-rows:38px minmax(0,1fr) minmax(100px,110px)}.header-layout .iconbtn{min-width:25px}}
+
+/* Canvas-only mode must not depend on the hidden panels' grid tracks. */
+.app.focus-mode .workspace{position:fixed;inset:0;width:100vw;height:100dvh;display:block;overflow:hidden;z-index:50;background:#151a22}
+.app.focus-mode .viewport{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:hidden;min-width:0;min-height:0}
+.app.focus-mode .viewarea{position:absolute;inset:0;width:100%;height:100%;display:block;min-width:0;min-height:0}
+.app.focus-mode #canvas{display:block;width:100%;height:100%}
+.app.focus-mode .viewbar,.app.focus-mode .bottom,.app.focus-mode .palette-reopen{display:none!important}
+.app.focus-mode .focus-exit{display:block;position:absolute;z-index:100}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.175.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.175.0/examples/jsm/"}}</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -77,7 +85,7 @@ function applyLayout(){
  }
  $('toggleFocus').setAttribute('aria-pressed',String(layoutState.focus));
  try{localStorage.setItem('3mf-painter-layout',JSON.stringify(layoutState))}catch{}
- requestAnimationFrame(()=>window.dispatchEvent(new Event('resize')));
+ requestAnimationFrame(()=>{window.dispatchEvent(new Event('resize'));requestAnimationFrame(()=>window.dispatchEvent(new Event('resize')))});
 }
 for(const [key,id] of [['tools','toggleTools'],['inspector','toggleInspector'],['palette','togglePalette']])
  $(id).addEventListener('click',()=>{layoutState[key]=!layoutState[key];applyLayout()});
@@ -249,7 +257,7 @@ function fit(which=meshes){
     const limitingHalfFov=Math.min(verticalFov,horizontalFov)/2;
     const distance=radius/Math.sin(limitingHalfFov)*1.22;
     camera.position.copy(center).addScaledVector(dir,distance);
-    camera.near=Math.max(.001,distance-radius*1.6, distance/10000);
+    camera.near=Math.max(.001,Math.min(.05,distance/10000));
     camera.far=Math.max(100,distance+radius*4);
   }else{
     const halfHeight=radius*1.28/Math.min(1,aspect);
@@ -402,5 +410,15 @@ $('paletteSave').onclick=()=>download(JSON.stringify({palette}), '3mf-painter-pa
 const shortcuts=[['B','Brush'],['D','Detail'],['G','Connected fill'],['F','Smart fill'],['R','Region'],['E','Eraser'],['I','Sample'],['M','Move model'],['Tab','Canvas-only'],['T','Tools panel'],['P','Palette'],['O','Properties'],['H','Frame all'],['Ctrl+Z','Undo'],['Ctrl+Y','Redo'],['[ / ]','Brush size'],['?','Help']];$('shortcuts').innerHTML=shortcuts.map(([k,v])=>`<div><span>${v}</span><kbd>${k}</kbd></div>`).join('');$('help').onclick=()=>$('modalwrap').classList.add('show');$('closeModal').onclick=()=>$('modalwrap').classList.remove('show');$('modalwrap').onclick=e=>{if(e.target===$('modalwrap'))$('modalwrap').classList.remove('show')};
 window.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))return;const key=e.key.toLowerCase();if(e.ctrlKey||e.metaKey){if(key==='z'){e.preventDefault();historyStep(e.shiftKey?redoStack:undoStack,e.shiftKey?undoStack:redoStack,!e.shiftKey)}else if(key==='y'){e.preventDefault();historyStep(redoStack,undoStack,false)}else if(key==='s'){e.preventDefault();saveProject()}else if(key==='o'){e.preventDefault();$('file').click()}return}if(key==='tab'){e.preventDefault();toggleFocus();return}if(key==='t'){layoutState.tools=!layoutState.tools;applyLayout();return}if(key==='p'){layoutState.palette=!layoutState.palette;applyLayout();return}if(key==='o'){layoutState.inspector=!layoutState.inspector;applyLayout();return}const map={b:'brush',d:'fine',g:'fill',f:'angle',r:'rectangle',e:'erase',i:'sample',m:'move'};if(map[key])setTool(map[key]);if(key==='h')fit();if(key==='['||key===']'){$('brushSize').value=Math.min(40,Math.max(.3,size+(key==='['?-1:1)));$('brushSize').dispatchEvent(new Event('input'))}if(key==='?')$('help').click();if(key==='escape')$('modalwrap').classList.remove('show')});
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
-function resize(){const w=ui.view.clientWidth,h=ui.view.clientHeight;if(w<=0||h<=0)return;renderer.setSize(w,h,false);if(camera.isPerspectiveCamera)camera.aspect=w/h;else{const height=camera.top-camera.bottom;camera.left=-height*w/h/2;camera.right=height*w/h/2}camera.updateProjectionMatrix()}new ResizeObserver(resize).observe(ui.view);resize();function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}animate();
+function resize(){const w=ui.view.clientWidth,h=ui.view.clientHeight;if(w<=0||h<=0)return;renderer.setSize(w,h,false);if(camera.isPerspectiveCamera)camera.aspect=w/h;else{const height=camera.top-camera.bottom;camera.left=-height*w/h/2;camera.right=height*w/h/2}camera.updateProjectionMatrix()}new ResizeObserver(resize).observe(ui.view);resize();function updateCameraClipPlanes(){
+  // The frame-to-fit near plane is far too distant once the user zooms in.
+  // Keep the near plane close while adjusting depth precision to the camera distance.
+  const distance=camera.position.distanceTo(controls.target);
+  const near=Math.max(.001,Math.min(.05,distance/10000));
+  if(Math.abs(camera.near-near)>Math.max(.0001,camera.near*.05)){
+    camera.near=near;
+    camera.updateProjectionMatrix();
+  }
+}
+function animate(){requestAnimationFrame(animate);controls.update();updateCameraClipPlanes();renderer.render(scene,camera)}animate();
 </script></body></html>
