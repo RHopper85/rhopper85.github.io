@@ -24,11 +24,20 @@
 .app.focus-mode .focus-exit{display:block}
 @media(max-width:900px){.workspace:not(.inspector-closed):not(.rail-closed){grid-template-columns:56px minmax(0,1fr) 240px}.workspace.rail-closed:not(.inspector-closed){grid-template-columns:0 minmax(0,1fr) 240px}.workspace.inspector-closed:not(.rail-closed){grid-template-columns:56px minmax(0,1fr) 0}.viewport.palette-closed{grid-template-rows:43px minmax(0,1fr) 0}}
 @media(max-width:650px){.workspace:not(.rail-closed){grid-template-columns:50px minmax(0,1fr) 0}.workspace.rail-closed{grid-template-columns:0 minmax(0,1fr) 0}.viewport.palette-closed{grid-template-rows:38px minmax(0,1fr) 0}.layout-actions .iconbtn{padding:0 4px;min-width:27px;font-size:12px}}
+
+/* Keep the filament palette in the viewport grid and expose controls in the top header. */
+.viewport{min-height:0;min-width:0;overflow:hidden;grid-template-rows:47px minmax(0,1fr) minmax(115px,137px)}
+.viewport .bottom{min-height:0;overflow:hidden;position:relative;z-index:1}
+.header-layout{flex:0 0 auto;gap:3px;border:1px solid #323b49;border-radius:8px;padding:3px;background:#1d2430}
+.header-layout .iconbtn{min-width:32px;height:30px}
+.header-layout .iconbtn.is-hidden{color:#8eabff;background:#28344b}
+@media(max-width:900px){.viewport:not(.palette-closed){grid-template-rows:43px minmax(0,1fr) minmax(105px,122px)}}
+@media(max-width:650px){.viewport:not(.palette-closed){grid-template-rows:38px minmax(0,1fr) minmax(100px,110px)}.header-layout .iconbtn{min-width:25px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.175.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.175.0/examples/jsm/"}}</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head><body><div class="app">
-<header class="top"><div class="brand"><span class="brandmark">◈</span> 3MF Painter <small>3D COLOR STUDIO</small></div><div class="separator"></div><div class="fileinfo" id="filename">Untitled project</div><span class="tag">LOCAL · PRIVATE</span><button class="btn flat" id="new" title="Start a new project">New</button><button class="btn" id="open">↥ &nbsp; Import</button><button class="btn" id="save">Save Project</button><button class="btn primary" id="export">⇩ &nbsp; Export 3MF</button><button class="iconbtn" id="help" title="Keyboard shortcuts">?</button></header>
+<header class="top"><div class="brand"><span class="brandmark">◈</span> 3MF Painter <small>3D COLOR STUDIO</small></div><div class="separator"></div><div class="fileinfo" id="filename">Untitled project</div><div class="layout-actions header-layout" aria-label="Workspace panels"><button class="iconbtn" id="toggleTools" title="Show/hide tools (T)" aria-label="Toggle tools panel" aria-pressed="true">☷</button><button class="iconbtn" id="togglePalette" title="Show/hide filament palette (P)" aria-label="Toggle filament palette" aria-pressed="true">◉</button><button class="iconbtn" id="toggleInspector" title="Show/hide properties (O)" aria-label="Toggle properties panel" aria-pressed="true">▤</button><button class="iconbtn" id="toggleFocus" title="Canvas-only mode (Tab)" aria-label="Canvas-only mode" aria-pressed="false">⛶</button></div><button class="btn flat" id="new" title="Start a new project">New</button><button class="btn" id="open">↥ &nbsp; Import</button><button class="btn" id="save">Save Project</button><button class="btn primary" id="export">⇩ &nbsp; Export 3MF</button><button class="iconbtn" id="help" title="Keyboard shortcuts">?</button></header>
 <div class="workspace" id="workspace"><nav class="rail" id="tools">
 <button class="tool active" data-tool="brush" title="Brush (B)"><span data-icon="brush"></span>Brush</button>
 <button class="tool" data-tool="fine" title="Fine brush (D)"><span data-icon="fine"></span>Detail</button>
@@ -38,7 +47,7 @@
 <button class="tool" data-tool="erase" title="Erase to default (E)"><span data-icon="eraser"></span>Erase</button>
 <button class="tool" data-tool="sample" title="Sample surface color (I)"><span data-icon="sample"></span>Sample</button>
 <div class="railhr"></div><button class="tool" data-tool="move" title="Select and move entire model (M)"><span data-icon="move"></span>Move</button><button class="tool" id="undo" title="Undo (Ctrl+Z)"><span data-icon="undo"></span>Undo</button><button class="tool" id="redo" title="Redo (Ctrl+Y)"><span data-icon="redo"></span>Redo</button><div style="flex:1"></div><button class="tool" id="fit" title="Frame all (H)"><span data-icon="focus"></span>Frame</button></nav>
-<main class="viewport" id="viewport"><div class="viewbar"><div class="layout-actions"><button class="iconbtn" id="toggleTools" title="Hide/show tools (T)" aria-label="Toggle tools panel" aria-pressed="true">☷</button><button class="iconbtn" id="togglePalette" title="Toggle filament palette (P) — click to restore if hidden" aria-label="Toggle filament palette" aria-pressed="true">◉</button><button class="iconbtn" id="toggleInspector" title="Hide/show properties (O)" aria-label="Toggle properties panel" aria-pressed="true">▤</button><button class="iconbtn" id="toggleFocus" title="Canvas-only mode (Tab)" aria-label="Canvas-only mode" aria-pressed="false">⛶</button></div><span class="micro">3D WORKSPACE</span><span class="muted" id="toolname" style="margin-left:12px">Brush · paint faces within radius</span><span class="spacer"></span><button class="iconbtn" id="wire" title="Wireframe">▦</button><button class="iconbtn" id="grid" title="Toggle grid">#</button><button class="iconbtn" id="projection" title="Toggle perspective / orthographic">◇</button><button class="iconbtn" id="resetview" title="Reset view">⌗</button></div>
+<main class="viewport" id="viewport"><div class="viewbar"><span class="micro">3D WORKSPACE</span><span class="muted" id="toolname" style="margin-left:12px">Brush · paint faces within radius</span><span class="spacer"></span><button class="iconbtn" id="wire" title="Wireframe">▦</button><button class="iconbtn" id="grid" title="Toggle grid">#</button><button class="iconbtn" id="projection" title="Toggle perspective / orthographic">◇</button><button class="iconbtn" id="resetview" title="Reset view">⌗</button></div>
 <div class="viewarea" id="view"><canvas id="canvas"></canvas><button class="palette-reopen" id="paletteReopen" title="Restore filament palette (P)">◉ &nbsp; Show Filament Palette</button><button class="focus-exit" id="exitFocus" title="Restore panels (Tab)">⛶ &nbsp; Exit canvas mode</button><div class="hint" id="hint">Left drag: paint · Right drag: rotate · Wheel: zoom<br>Middle drag: pan · Hold Alt: orbit</div><div class="empty" id="empty"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"><path d="M50 8 88 29v43L50 93 12 72V29Z M12 29l38 23 38-23 M50 52v41"/><path d="M30 39 70 17 M29 82 69 60" opacity=".5"/></svg><h2>Your canvas is ready</h2><p>Import a 3MF or STL, or create a sample model</p><button class="btn primary" id="sample" style="pointer-events:auto;margin-top:8px">Create sample model</button></div><div class="drop">Drop a 3MF / STL file to start</div></div>
 <div class="bottom"><div style="display:flex;align-items:center;justify-content:space-between"><span class="micro">FILAMENT PALETTE</span><div><button class="smallbtn" id="paletteSave">Save palette</button> <button class="smallbtn" id="paletteLoad">Load palette</button></div></div><div class="palette" id="palette"></div><div class="botrow"><span id="paletteLabel">Color 1</span><span id="colorHex">#F3F5F9</span><span class="grow"></span><span>Colors can be edited in the inspector →</span></div></div></main>
 <aside class="sidebar"><section class="section"><div class="secttitle">Paint Properties <span>◉</span></div><div class="row"><span class="muted">Active color</span><div class="colordetail"><input class="colorpicker" type="color" id="colorPicker" value="#f3f5f9"><span class="value" id="activeHex">#F3F5F9</span></div></div><div class="row"><span class="muted">Brush diameter</span><span class="value" id="brushVal">5.0 mm</span></div><input class="range" id="brushSize" type="range" min="0.3" max="40" step="0.1" value="5"><div class="row"><span class="muted">Fill diameter</span><span class="value" id="fillVal">40 mm</span></div><input class="range" id="fillSize" type="range" min="2" max="250" step="1" value="40"><div class="row"><span class="muted">At maximum</span><span class="value">Whole object (all faces)</span></div><div class="row"><span class="muted">Surface angle limit</span><span class="value" id="angleVal">35°</span></div><input class="range" id="angleSize" type="range" min="0" max="180" step="1" value="35"><div class="row"><span class="muted">Selection mode</span></div><div class="seg"><button id="selVisible" class="sel">Visible</button><button id="selThrough">Through</button></div><div class="row"><span class="muted">Painting</span><span id="paintMode" class="value">Per triangle</span></div><div class="selectrow"><button class="smallbtn" id="paintAll">Paint object</button><button class="smallbtn" id="paintModel">Paint entire model</button><button class="smallbtn" id="resetColor">Clear object</button></div></section>
@@ -54,7 +63,9 @@ import {TransformControls} from 'three/addons/controls/TransformControls.js';
 const $=id=>document.getElementById(id), jszip=window.JSZip;
 const ui={view:$('view'),canvas:$('canvas')};
 const layoutState={tools:true,inspector:true,palette:true,focus:false};
-try{Object.assign(layoutState,JSON.parse(localStorage.getItem('3mf-painter-layout')||'{}'))}catch{}
+try{const saved=JSON.parse(localStorage.getItem('3mf-painter-layout')||'{}');layoutState.tools=saved.tools!==false;layoutState.inspector=saved.inspector!==false;}catch{}
+// Always restore the palette on initial load; users can still collapse it per session.
+layoutState.palette=true;layoutState.focus=false;
 function applyLayout(){
  const ws=$('workspace'),vp=$('viewport');
  ws.classList.toggle('rail-closed',!layoutState.tools);
@@ -219,14 +230,45 @@ function updateFillRange(){
  slider.value=String(Math.min(fillSize,needed));
  $('fillVal').textContent=fillSize>=needed?'Whole object':fillSize+' mm';
 }
-function fit(which=meshes){if(!which.length)return;const bounds=new THREE.Box3();for(const m of which)if(m.visible){m.updateWorldMatrix(true,false);bounds.expandByObject(m)}if(bounds.isEmpty())return;const center=bounds.getCenter(new THREE.Vector3()),max=bounds.getSize(new THREE.Vector3()).length()||10,dir=new THREE.Vector3(1,-1.35,.95).normalize();controls.target.copy(center);camera.position.copy(center).addScaledVector(dir,max*1.4);camera.near=Math.max(.001,max/10000);camera.far=max*100;camera.updateProjectionMatrix();controls.update();grid.position.z=bounds.min.z-.06}
+function fit(which=meshes){
+  if(!which.length)return;
+  const bounds=new THREE.Box3();
+  for(const m of which)if(m.visible){m.updateWorldMatrix(true,false);bounds.expandByObject(m)}
+  if(bounds.isEmpty())return;
+  // Frame the complete bounding sphere, including protrusions, at any viewport aspect ratio.
+  const center=bounds.getCenter(new THREE.Vector3());
+  const radius=Math.max(bounds.getBoundingSphere(new THREE.Sphere()).radius,0.1);
+  const width=Math.max(1,ui.view.clientWidth),height=Math.max(1,ui.view.clientHeight);
+  const aspect=width/height;
+  const dir=new THREE.Vector3(1,-1.35,.95).normalize();
+  controls.target.copy(center);
+  if(camera.isPerspectiveCamera){
+    camera.aspect=aspect;
+    const verticalFov=THREE.MathUtils.degToRad(camera.fov);
+    const horizontalFov=2*Math.atan(Math.tan(verticalFov/2)*aspect);
+    const limitingHalfFov=Math.min(verticalFov,horizontalFov)/2;
+    const distance=radius/Math.sin(limitingHalfFov)*1.22;
+    camera.position.copy(center).addScaledVector(dir,distance);
+    camera.near=Math.max(.001,distance-radius*1.6, distance/10000);
+    camera.far=Math.max(100,distance+radius*4);
+  }else{
+    const halfHeight=radius*1.28/Math.min(1,aspect);
+    camera.left=-halfHeight*aspect;camera.right=halfHeight*aspect;
+    camera.top=halfHeight;camera.bottom=-halfHeight;
+    camera.position.copy(center).addScaledVector(dir,radius*3);
+    camera.near=.001;camera.far=Math.max(100,radius*10);
+  }
+  camera.updateProjectionMatrix();
+  controls.update();
+  grid.position.z=bounds.min.z-.06;
+}
 $('fit').onclick=()=>fit();$('resetview').onclick=()=>fit();$('center').onclick=()=>fit(active?[active]:meshes);$('wire').onclick=()=>{wire=!wire;for(const m of meshes)m.material.wireframe=wire;$('wire').classList.toggle('on',wire)};$('grid').onclick=()=>{grid.visible=!grid.visible;$('grid').classList.toggle('on',grid.visible)};$('projection').onclick=()=>{const c=controls.target.clone(),d=camera.position.clone().sub(c),ratio=ui.view.clientWidth/ui.view.clientHeight;if(!ortho){const dist=d.length(),height=dist*Math.tan(THREE.MathUtils.degToRad(43/2))*2;const nc=new THREE.OrthographicCamera(-height*ratio/2,height*ratio/2,height/2,-height/2,camera.near,camera.far);nc.position.copy(camera.position);nc.up.set(0,0,1);camera=nc;ortho=true}else{const nc=new THREE.PerspectiveCamera(43,ratio,camera.near,camera.far);nc.position.copy(camera.position);nc.up.set(0,0,1);camera=nc;ortho=false}controls.object=camera;transformGizmo.camera=camera;controls.update();$('projection').classList.toggle('on',ortho)};
 function updateObjects(){const box=$('objects');box.innerHTML='';for(const m of meshes){const b=document.createElement('div');b.className='object'+(m===active?' selected':'');const left=document.createElement('button');left.style.cssText='flex:1;min-width:0;border:0;background:none;text-align:left;color:inherit;cursor:pointer';left.innerHTML=`<div class="objname">⬡ &nbsp;${escapeHtml(m.name)}</div><div class="count">${m.userData.triangles.length.toLocaleString()} faces</div>`;left.onclick=()=>{active=m;updateObjects()};const eye=document.createElement('button');eye.className='iconbtn';eye.textContent=m.visible?'◉':'○';eye.title='Toggle visibility';eye.onclick=()=>{m.visible=!m.visible;updateObjects()};b.append(left,eye);box.append(b)}$('objNum').textContent=meshes.length;$('objectCount').textContent=meshes.length;updateStats()}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function updateStats(){const tris=meshes.reduce((n,m)=>n+m.userData.triangles.length,0);$('triangles').textContent=tris.toLocaleString();$('stats').textContent=`${meshes.length} objects · ${tris.toLocaleString()} faces`;$('usedColors').textContent=new Set(meshes.flatMap(m=>m.userData.faceColors)).size||'—';if(meshes.length){const box=new THREE.Box3();meshes.forEach(m=>box.expandByObject(m));const v=box.getSize(new THREE.Vector3());$('dimensions').textContent=[v.x,v.y,v.z].map(x=>x.toFixed(1)).join(' × ')+' mm'}else $('dimensions').textContent='—'}
 $('paintModel').onclick=()=>{if(!meshes.length)return toast('Import a model first');startStroke();for(const m of meshes)m.userData.faceColors.forEach((_,i)=>changeFace(m,i,palette[colorIndex]));endStroke();toast('Entire model painted')};$('paintAll').onclick=()=>{if(!active)return toast('Select an object first');startStroke();active.userData.faceColors.forEach((_,i)=>changeFace(active,i,palette[colorIndex]));endStroke()};$('resetColor').onclick=()=>{if(!active)return;startStroke();active.userData.faceColors.forEach((_,i)=>changeFace(active,i,palette[0]));endStroke()};$('showAll').onclick=()=>{meshes.forEach(m=>m.visible=true);updateObjects()};
 function clearScene(){transformGizmo.detach();exportedBambuOffset.set(0,0,0);root.position.set(0,0,0);syncPositionInputs();hidePreview();hoverPreview.parent?.remove(hoverPreview);for(const m of meshes){root.remove(m);m.geometry.dispose();m.material.dispose()}meshes=[];active=null;undoStack=[];redoStack=[];$('empty').classList.remove('hidden');updateObjects()}
-function modelReady(name){if(tool==='move'&&meshes.length)attachMoveGizmo();syncPositionInputs();projectName=name.replace(/\.[^.]+$/,'');setDirty(false);active=meshes[0]||null;updateObjects();$('empty').classList.toggle('hidden',meshes.length>0);fit();status('Model loaded · Use the toolbar to paint');toast(`${meshes.length} object(s) ready to paint`)}
+function modelReady(name){if(tool==='move'&&meshes.length)attachMoveGizmo();syncPositionInputs();projectName=name.replace(/\.[^.]+$/,'');setDirty(false);active=meshes[0]||null;updateObjects();$('empty').classList.toggle('hidden',meshes.length>0);resize();fit();requestAnimationFrame(()=>{resize();fit()});status('Model loaded · Use the toolbar to paint');toast(`${meshes.length} object(s) ready to paint`)}
 const elementChildren=(node,name)=>[...node.children].filter(e=>e.localName===name);const attr=(e,a,f='')=>{if(!e)return f;const direct=e.getAttribute(a);if(direct!==null)return direct;const matched=[...e.attributes].find(x=>x.localName===a);return matched?.value??f};
 function transform12(text){const x=(text||'').trim().split(/\s+/).map(Number);if(x.length!==12)return new THREE.Matrix4();return new THREE.Matrix4().set(x[0],x[3],x[6],x[9],x[1],x[4],x[7],x[10],x[2],x[5],x[8],x[11],0,0,0,1)}
 async function import3mf(buffer,name){
