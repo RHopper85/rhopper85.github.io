@@ -237,6 +237,19 @@
     .link-tile .link-location { margin: -2px 0 13px; font-size: 11px; color: #aab7bf; }
     .link-tile .foot { margin-top: auto; }
     .link-tile .link-visit { background: #342b1d; font-weight: 600; padding: 7px 10px; }
+    /* ================================================================
+       OPTIONAL PAID TAG — Add `paid: true` to any Useful Links website.
+       The badge appears below its domain, inside the website header.
+       Remove the field (or set false) to hide it again.
+       ================================================================ */
+    .link-tile .link-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+    .link-tile .link-paid {
+      display: inline-flex; align-items: center;
+      border: 1px solid #b18b4e; border-radius: 6px;
+      background: #49351f; color: #f5d79f;
+      padding: 3px 9px; font-size: 10px; font-weight: 750;
+      line-height: 1.3; letter-spacing: .08em; text-transform: uppercase;
+    }
     .link-tile .link-kind { color: #9dadb7; font-size: 10px; letter-spacing: .14em; font-weight: 700; }
     .link-tile:hover .link-brand { box-shadow: inset 0 1px 0 #ffffff25, 0 5px 18px #0006; }
     @media (max-width: 600px) { .link-brand { width: 56px; height: 56px; } }
@@ -357,6 +370,12 @@
            initials: 'PR',                      // OPTIONAL: override the letters
            logoBackground: '#ffffff'            // OPTIONAL: behind image
          }
+
+       OPTIONAL PAID TAG:
+       Add `paid: true` to a website entry to display a gold "Paid" tag.
+       Leave the field out (or use `paid: false`) for no tag.
+       For example:
+         { title: 'Example Tool', url: 'https://example.com/', paid: true }
 
        The `logo` and `initials` fields are OPTIONAL. Existing entries work.
        You can also use an old `favicon` field as the custom logo source.
@@ -511,9 +530,10 @@
             description: 'Find and download models shared by other creators',
             links: [
               {
-                title: 'Cults3D 💲',
+                title: 'Cults3D',
                 description: 'Browse community-created 3D models, including paid designs.',
-                url: 'https://www.cults3d.com/'
+                url: 'https://www.cults3d.com/',
+                paid: true // This site was previously marked with 💲 in the title.
               },
               {
                 title: 'MakerWorld',
@@ -1816,6 +1836,19 @@
       domain.className = 'link-domain';
       domain.textContent = url ? url.hostname.replace(/^www\./, '') : 'Invalid website URL';
       headCopy.append(title, domain);
+
+      // Paid is optional: only links explicitly marked `paid: true` get it.
+      // This is an informational tag; other sites remain unchanged.
+      if (link.paid === true) {
+        const badges = document.createElement('div');
+        badges.className = 'link-badges';
+        const badge = document.createElement('span');
+        badge.className = 'link-paid';
+        badge.textContent = 'Paid';
+        badge.setAttribute('aria-label', 'Paid content or service');
+        badges.append(badge);
+        headCopy.append(badges);
+      }
       head.append(brand, headCopy);
 
       const description = document.createElement('p');
