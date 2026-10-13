@@ -437,8 +437,7 @@
               {
                 title: 'Meshy AI',
                 description: 'Generate and texture 3D models from text prompts or images.',
-                url: 'https://www.meshy.ai/',
-                paid: true
+                url: 'https://www.meshy.ai/'
               }
               // ADD MORE CAD OR AI TOOLS HERE (separate entries with commas).
             ]
@@ -455,14 +454,12 @@
               {
                 title: 'Gridfinity Generator',
                 description: 'Design custom Gridfinity bins, baseplates, and fitted cutouts.',
-                url: 'https://gridfinitygenerator.com/en',
-                paid: true
+                url: 'https://gridfinitygenerator.com/en'
               },
               {
                 title: 'Tray Generator',
                 description: 'Create made-to-measure sorting trays, bins, and drawer organizers.',
-                url: 'https://printpal.io/tools/bin-generator',
-                paid: true
+                url: 'https://printpal.io/tools/bin-generator'
               }
               // ADD MORE PARAMETRIC GENERATORS HERE.
             ]
@@ -474,26 +471,22 @@
               {
                 title: 'Flexi Maker',
                 description: 'Add articulated joints to STL models for flexi-style prints.',
-                url: 'https://printpal.io/tools/flexi-model-creator',
-                paid: true
+                url: 'https://printpal.io/tools/flexi-model-creator'
               },
               {
                 title: 'PetTo3D Figurine Maker',
                 description: 'Turn a photo of your pet into a printable 3D figurine.',
-                url: 'https://printpal.io/tools/pet-3d-generator',
-                paid: true
+                url: 'https://printpal.io/tools/pet-3d-generator'
               },
               {
                 title: 'Face to 3D Figurine Maker',
                 description: 'Turn selfies or portraits into personalized 3D figurines.',
-                url: 'https://printpal.io/tools/face-3d-generator',
-                paid: true
+                url: 'https://printpal.io/tools/face-3d-generator'
               },
               {
                 title: 'Desk Pal Maker',
                 description: 'Design a printable desk-pet shell for an ESP32 round-screen display.',
-                url: 'https://printpal.io/tools/desk-pal-maker',
-                paid: true
+                url: 'https://printpal.io/tools/desk-pal-maker'
               }
               // ADD MORE FIGURINE AND CHARACTER MAKERS HERE.
             ]
@@ -502,6 +495,11 @@
             name: 'Model Editing & Conversion',
             description: 'Convert, split, and customize existing 3D files',
             links: [
+              {
+                title: '3MF Painter',
+                description: 'Paint directly on 3MF files..',
+                url: 'https://rhopper85.github.io/3MFPainter/'
+              },
               {
                 title: 'STL to STEP Converter',
                 description: 'Convert an STL mesh into a STEP file.',
@@ -540,7 +538,7 @@
                 title: 'Cults3D',
                 description: 'Browse community-created 3D models, including paid designs.',
                 url: 'https://www.cults3d.com/',
-                paid: true 
+                paid: true // This site was previously marked with 💲 in the title.
               },
               {
                 title: 'MakerWorld',
@@ -1200,7 +1198,7 @@
     async function loadRepository() {
       refreshButton.disabled = true;
       refreshButton.textContent = '↻ Checking…';
-      status.textContent = '';
+      status.textContent = 'Checking GitHub for your folders and files…';
       try {
         const { owner, repo, branch } = CONFIG;
         const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
