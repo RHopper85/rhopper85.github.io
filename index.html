@@ -1199,7 +1199,7 @@
     async function loadRepository() {
       refreshButton.disabled = true;
       refreshButton.textContent = '↻ Checking…';
-      status.textContent = 'Checking GitHub for your folders and files…';
+      status.textContent = '';
       try {
         const { owner, repo, branch } = CONFIG;
         const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
