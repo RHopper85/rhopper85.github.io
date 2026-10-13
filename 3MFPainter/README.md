@@ -1,18 +1,18 @@
-# Chromatic — 3MF Paint Studio
+# 3MF Painter — 3MF Paint Studio
 
 A standalone browser-based 3MF/STL geometry painter, delivered in one HTML file. Uses Three.js and JSZip from CDNs. Host as a static GitHub Pages site with no backend.
 
 ## Deploy to GitHub Pages
 
-1. Create a public GitHub repository (for example `chromatic-3mf`).
+1. Create a public GitHub repository (for example `3MF Painter-3mf`).
 2. Upload `index.html` to the repository root and commit.
 3. Open **Settings → Pages → Build and deployment**, choose **Deploy from a branch**, `main`, `/ (root)`, and save.
-4. Visit `https://YOUR-USERNAME.github.io/chromatic-3mf/` once deployed.
+4. Visit `https://YOUR-USERNAME.github.io/3MF Painter-3mf/` once deployed.
 5. Link that URL from your main website.
 
 ## Features
 
-- Load common mesh-based 3MF documents (including build items and component transforms), binary/ASCII STL and native `.chromatic` projects.
+- Load common mesh-based 3MF documents (including build items and component transforms), binary/ASCII STL and native `.3MF Painter` projects.
 - Orbit, zoom, pan, fit, grid, wireframe, perspective/orthographic view, object visibility, and a model tree.
 - Brush, detail (per triangle), connected region fill, angle-constrained smart fill, screen-space rectangle, eraser and eyedropper.
 - Full per-stroke undo/redo, object-wide paint/clear, filament palette editing, import/export presets and project saving.
@@ -37,6 +37,6 @@ Uses Three.js 0.175.0 and JSZip 3.10.1 directly from public CDNs. Single-file st
 ## Testing checklist
 
 - Import a representative STL and 3MF.
-- Paint with each tool, undo and redo; save `.chromatic` and reopen.
+- Paint with each tool, undo and redo; save `.3MF Painter` and reopen.
 - Export 3MF and load into the intended slicer; inspect face colors, proportions, components and slicing preview.
 - Test on large files and check browser console for errors.
