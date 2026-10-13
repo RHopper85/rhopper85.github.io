@@ -376,100 +376,185 @@
        Remember to put commas BETWEEN objects in arrays. Example templates
        at the end are commented out so they do not appear until enabled.
        ===================================================================== */
+    /* ================================================================
+       ORGANIZED 3D PRINTING LINKS — EDIT YOUR WEBSITES BELOW
+
+       Each subcategory is a folder under "3D Printing".
+       - Add a website: copy a { title, description, url } entry in links[].
+       - Add a folder: copy a { name, description, links: [] } entry
+         into children[]. Remember commas between entries.
+       - Move a link: cut its entire { ... } entry and paste into a
+         different folder's links[] array.
+       - Optional: logo: 'images/logos/site.png' replaces the colored
+         initials tile; initials: 'AB' overrides its default letters.
+
+       The Printable Models links from your previous version are retained.
+       The website still automatically discovers GitHub files separately.
+       ================================================================ */
     const USEFUL_LINKS = [
       {
         name: '3D Printing',
-        description: 'Useful 3D printing tools and model libraries',
+        description: '3D design, model generators, printing utilities and printable model libraries',
         children: [
           {
-            name: 'Tools',
-            description: 'Converters, filament profiles, and handy utilities',
+            name: '3D Design & AI',
+            description: 'Design models from scratch or generate them with AI',
+            links: [
+              {
+                title: 'MakerLab',
+                description: 'Bambu Lab tools for creating and customizing 3D-printable designs.',
+                url: 'https://makerworld.com/en/makerlab'
+              },
+              {
+                title: 'Tinkercad',
+                description: 'Easy, browser-based 3D CAD design for beginners.',
+                url: 'https://www.tinkercad.com/'
+              },
+              {
+                title: 'TitanCraft',
+                description: 'Build custom tabletop heroes, monsters, and 3D-printable miniatures.',
+                url: 'https://titancraft.com/'
+              },
+              {
+                title: 'Meshy AI',
+                description: 'Generate and texture 3D models from text prompts or images.',
+                url: 'https://www.meshy.ai/'
+              }
+              // ADD MORE CAD OR AI TOOLS HERE (separate entries with commas).
+            ]
+          },
+          {
+            name: 'Model Generators & Organizers',
+            description: 'Adjust dimensions and generate useful printable parts',
+            links: [
+              {
+                title: 'Gear Generator',
+                description: 'Design and simulate custom gears; export 3D models.',
+                url: 'https://geargenerator.com/'
+              },
+              {
+                title: 'Gridfinity Generator',
+                description: 'Design custom Gridfinity bins, baseplates, and fitted cutouts.',
+                url: 'https://gridfinitygenerator.com/en'
+              },
+              {
+                title: 'Tray Generator',
+                description: 'Create made-to-measure sorting trays, bins, and drawer organizers.',
+                url: 'https://printpal.io/tools/bin-generator'
+              }
+              // ADD MORE PARAMETRIC GENERATORS HERE.
+            ]
+          },
+          {
+            name: 'Figures & Creative Models',
+            description: 'Make articulated models, figurines, and custom characters',
+            links: [
+              {
+                title: 'Flexi Maker',
+                description: 'Add articulated joints to STL models for flexi-style prints.',
+                url: 'https://printpal.io/tools/flexi-model-creator'
+              },
+              {
+                title: 'PetTo3D Figurine Maker',
+                description: 'Turn a photo of your pet into a printable 3D figurine.',
+                url: 'https://printpal.io/tools/pet-3d-generator'
+              },
+              {
+                title: 'Face to 3D Figurine Maker',
+                description: 'Turn selfies or portraits into personalized 3D figurines.',
+                url: 'https://printpal.io/tools/face-3d-generator'
+              },
+              {
+                title: 'Desk Pal Maker',
+                description: 'Design a printable desk-pet shell for an ESP32 round-screen display.',
+                url: 'https://printpal.io/tools/desk-pal-maker'
+              }
+              // ADD MORE FIGURINE AND CHARACTER MAKERS HERE.
+            ]
+          },
+          {
+            name: 'Model Editing & Conversion',
+            description: 'Convert, split, and customize existing 3D files',
             links: [
               {
                 title: 'STL to STEP Converter',
-                description: 'Turn an STL into a STEP file',
+                description: 'Convert an STL mesh into a STEP file.',
                 url: 'https://paramability.app/stl-to-step'
               },
               {
+                title: 'Split3MF',
+                description: 'Split 3MF, STL, or OBJ models into separate printable parts.',
+                url: 'https://split3mf.com/'
+              },
+              {
+                title: 'BumpMesh',
+                description: 'Apply patterns and surface textures to 3D models in your browser.',
+                url: 'https://bumpmesh.com/'
+              }
+              // ADD MORE MODEL EDITING OR CONVERSION TOOLS HERE.
+            ]
+          },
+          {
+            name: 'Printing Resources',
+            description: 'Settings, material references, and printer resources',
+            links: [
+              {
                 title: '3D Filament Profiles',
-                description: '3D filament profiles and settings',
+                description: 'Find filament profiles and print settings.',
                 url: 'https://3dfilamentprofiles.com/'
               }
-              // ADD MORE TOOL LINKS HERE (put a comma after the previous link).
+              // ADD MORE PRINTING RESOURCES HERE.
             ]
           },
           {
             name: 'Printable Models',
-            description: 'Find and download 3D-printable models',
+            description: 'Find and download models shared by other creators',
             links: [
               {
                 title: 'Cults3D 💲',
-                description: 'Browse Paid community-created 3D models',
+                description: 'Browse community-created 3D models, including paid designs.',
                 url: 'https://www.cults3d.com/'
               },
               {
-                title: 'Makerworld',
-                description: 'Browse community-created 3D models specifically for BambuLabs Printers',
+                title: 'MakerWorld',
+                description: 'Browse 3D models and print profiles for Bambu Lab printers.',
                 url: 'https://makerworld.com/'
               },
               {
                 title: 'Thingiverse',
-                description: 'Browse community-created 3D models',
+                description: 'Discover and download community-shared 3D models.',
                 url: 'https://www.thingiverse.com/'
               },
               {
                 title: 'Printables',
-                description: 'Browse and share printable 3D models',
+                description: 'Browse and share models ready for 3D printing.',
                 url: 'https://www.printables.com/'
               }
-              // ADD MORE MODEL LINKS HERE.
+              // ADD MORE MODEL LIBRARIES HERE.
             ]
           }
           // ADD MORE 3D PRINTING SUBCATEGORIES HERE (start with a comma).
         ]
-      },
-      /*{
+      }
+
+      /* ================================================================
+         FUTURE TOP-LEVEL CATEGORY — DISABLED UNTIL NEEDED
+         To enable: uncomment the object AND its leading comma.
+
+      ,{
         name: 'Useful Websites',
         description: 'General websites and online resources',
         children: [
           {
             name: 'Search Engines',
-            description: 'Find information on the web',
+            description: 'Search the web',
             links: [
-              {
-                title: 'Google',
-                description: 'Google search engine',
-                url: 'https://www.google.com/'
-              }
-              // ADD MORE SEARCH ENGINES HERE.
-            ]
-          }
-        ]
-      }*/
-
-      /* ================================================================
-         FUTURE TOP-LEVEL CATEGORY TEMPLATE — CURRENTLY COMMENTED OUT
-         To enable: copy the object below outside these comment markers
-         and separate it from the previous category with a comma.
-
-      ,{
-        name: 'Another Category',
-        description: 'Describe this category',
-        children: [
-          {
-            name: 'New Subcategory',
-            description: 'Describe the subcategory',
-            links: [
-              {
-                title: 'New Website',
-                description: 'Why this link is useful',
-                url: 'https://example.com/'
-              }
+              { title: 'Google', description: 'Search the web.', url: 'https://www.google.com/' }
             ]
           }
         ]
       }
-         END FUTURE CATEGORY TEMPLATE ==================================== */
+         END DISABLED CATEGORY ========================================== */
     ];
     /* ===== END OF USEFUL LINKS EDITING SECTION =========================== */
 
