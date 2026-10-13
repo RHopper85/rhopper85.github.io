@@ -154,21 +154,35 @@
     .page-panel[hidden] { display: none !important; }
     .link-collection .symbol { font-size: 28px; }
     /* ================================================================
-       USEFUL LINKS — WEBSITE FAVICONS
-       Website logos are automatically requested from Google's favicon
-       service. You can override any logo using `favicon` in USEFUL_LINKS.
-       If an icon cannot be loaded, the original link symbol appears.
+       USEFUL LINKS — AUTOMATIC INITIALS + OPTIONAL CUSTOM WEBSITE LOGOS
+
+       Every site gets a branded initials tile (no outside favicon service).
+       To show a real logo, set `logo` on that website in USEFUL_LINKS.
+       If the logo can't load, the initials remain visible automatically.
+       Change dimensions and the look of the tiles here.
        ================================================================ */
-    .link-favicon {
-      width: 54px; height: 54px; flex: none;
+    .link-brand {
+      width: 64px; height: 64px; flex: none;
       display: grid; place-items: center;
-      border: 1px solid #66543a; border-radius: 13px;
-      background: linear-gradient(145deg, #30343a, #1a242c);
-      box-shadow: inset 0 1px 0 #ffffff0c;
+      overflow: hidden; position: relative;
+      border: 1px solid var(--brand-border, #806b48);
+      border-radius: 15px;
+      background: linear-gradient(140deg, var(--brand-top, #304e60), var(--brand-bottom, #192b39));
+      box-shadow: inset 0 1px 0 #ffffff22, 0 4px 14px #0003;
     }
-    .link-favicon img { display: block; width: 36px; height: 36px; object-fit: contain; }
-    .link-favicon img[hidden] { display: none; }
-    .link-favicon .favicon-fallback { font-size: 27px; line-height: 1; }
+    .link-brand .brand-initials {
+      font: 700 23px/1 system-ui, "Segoe UI", sans-serif;
+      letter-spacing: -.04em;
+      color: #f9f6ed;
+      text-shadow: 0 1px 3px #0005;
+    }
+    .link-brand .brand-initials[hidden] { display: none; }
+    .link-brand img {
+      display: block; width: 100%; height: 100%;
+      padding: 9px; object-fit: contain;
+      background: var(--logo-bg, #ffffff);
+    }
+    .link-brand img[hidden] { display: none; }
     .link-tile .link-domain { display: inline-block; margin-top: 2px; overflow-wrap: anywhere;
       font-size: 12px; color: #c2a36d; }
     /* ================================================================
@@ -209,12 +223,12 @@
     .file-media.is-clickable:hover { border-bottom-color: #be965c; }
     .file-media.is-clickable:focus-visible { outline: 2px solid var(--gold); outline-offset: -3px; }
     /* ================================================================
-       POLISHED LINK CARDS — The favicon, website name and domain form
+       POLISHED LINK CARDS — The brand tile, website name and domain form
        a compact header. Link descriptions and category context sit below.
        ================================================================ */
     .link-tile { position: relative; min-height: 190px; }
     .link-tile:hover { border-color: #ad8c57; box-shadow: 0 8px 30px #0003; }
-    .link-tile .link-head { display: flex; gap: 13px; align-items: center; margin-bottom: 17px; }
+    .link-tile .link-head { display: flex; gap: 15px; align-items: center; margin-bottom: 17px; }
     .link-tile .link-head-copy { min-width: 0; flex: 1; }
     .link-tile .link-head h3 { font-size: 21px; line-height: 1.2; margin: 0 0 5px; }
     .link-tile .link-domain { display: block; margin: 0; overflow-wrap: anywhere;
@@ -224,7 +238,8 @@
     .link-tile .foot { margin-top: auto; }
     .link-tile .link-visit { background: #342b1d; font-weight: 600; padding: 7px 10px; }
     .link-tile .link-kind { color: #9dadb7; font-size: 10px; letter-spacing: .14em; font-weight: 700; }
-    .link-tile .link-favicon { border-color: #806b48; background: #202932; }
+    .link-tile:hover .link-brand { box-shadow: inset 0 1px 0 #ffffff25, 0 5px 18px #0006; }
+    @media (max-width: 600px) { .link-brand { width: 56px; height: 56px; } }
     @media(prefers-reduced-motion: reduce) {
       .file-media.is-loading .media-placeholder { animation: none; }
     }
@@ -329,17 +344,25 @@
        Add an entry to any folder's `links: [ ... ]` list:
          { title: 'Site Name', description: 'What it does', url: 'https://...' }
 
-       WEBSITE FAVICONS (AUTOMATIC):
-       Every website card automatically shows its favicon (website logo).
-       You do NOT need to edit any existing link entries to enable this.
-       If a website displays the wrong icon, optionally add a custom URL:
-         favicon: 'https://example.com/my-icon.png'
-       Add a comma after the url field before adding `favicon`.
+       WEBSITE INITIALS & OPTIONAL LOGOS:
+       Each link automatically gets a colored tile with 1-2 initials from
+       its title. No favicon requests, third-party service, or setup needed.
 
-       MODEL THUMBNAILS are managed automatically from your GitHub files.
-       You do not need to add image paths to USEFUL_LINKS for 3D models.
-       An invalid/unavailable custom icon falls back to automatic lookup;
-       if that also fails, the card keeps a generic link symbol.
+       You can OPTIONALLY provide a custom logo from your repository or a URL:
+         {
+           title: 'Printables',
+           description: 'Browse printable models',
+           url: 'https://www.printables.com/',
+           logo: 'images/logos/printables.png',  // OR https://example.com/logo.svg
+           initials: 'PR',                      // OPTIONAL: override the letters
+           logoBackground: '#ffffff'            // OPTIONAL: behind image
+         }
+
+       The `logo` and `initials` fields are OPTIONAL. Existing entries work.
+       You can also use an old `favicon` field as the custom logo source.
+       If a logo cannot load, the colored initials tile appears instead.
+
+       MODEL THUMBNAILS are separate and still work automatically for files.
 
        HOW TO ADD A SUBCATEGORY:
        Add another folder object to any folder's `children: [ ... ]` list:
@@ -1532,8 +1555,9 @@
        The objects in USEFUL_LINKS are the source of truth. Each category or
        subcategory can contain `children` (more folders) and `links` (websites).
        No changes to this rendering code are necessary when you add entries.
-       Cards automatically display favicon, title, domain and description.
-       For a custom favicon use optional `favicon: 'https://...'`.
+       Cards display colored initials by default, plus title/domain/description.
+       Add an optional `logo: 'images/logos/site.png'` to show a website logo.
+       A failed or missing logo falls back to the initials automatically.
        ===================================================================== */
     const tabFiles = document.getElementById('tab-files');
     const tabLinks = document.getElementById('tab-links');
@@ -1592,57 +1616,101 @@
     }
 
     /* =====================================================================
-       USEFUL LINKS — AUTOMATIC FAVICON LOADING
+       USEFUL LINKS — WEBSITE INITIALS + OPTIONAL CUSTOM LOGOS
 
-       The site's hostname is used to request its favicon from Google's
-       public favicon endpoint. No API key or separate file is needed.
-       Icons are loaded lazily, so large link collections stay responsive.
+       Change no code to add a link: initials and colors are auto-generated.
+       To supply a real logo, set `logo: 'images/logos/mysite.png'` in the
+       relevant USEFUL_LINKS entry. Absolute HTTPS logo URLs also work.
+       Legacy `favicon` overrides remain supported (but NOT auto-requested).
 
-       OPTIONAL OVERRIDE in a USEFUL_LINKS entry:
-         url: 'https://example.com/',
-         favicon: 'https://example.com/custom-icon.png'
-
-       If a custom icon fails, the code retries the automatic icon; if both
-       fail, visitors see the original 🔗 symbol instead of a broken image.
+       Optional `initials: 'MW'` lets you choose the letters yourself.
+       Optional `logoBackground: '#ffffff'` changes the image background.
+       If a logo fails to load, the visible initials remain in place.
        ===================================================================== */
-    function makeWebsiteFavicon(link, siteUrl) {
+
+    // A restrained palette that complements the gold / dark-medieval theme.
+    const WEBSITE_BRAND_COLORS = [
+      ['#42668a', '#20324f', '#6687a5'], // steel blue
+      ['#38766f', '#1b433f', '#69a79a'], // forest teal
+      ['#745f93', '#33264e', '#9b84b7'], // royal violet
+      ['#945c56', '#4b292b', '#b98176'], // burgundy
+      ['#867044', '#443721', '#b79b63'], // bronze
+      ['#496f53', '#213d32', '#7daa84'], // moss green
+      ['#866388', '#493149', '#ab82ae']  // plum
+    ];
+
+    function websiteInitials(link, siteUrl) {
+      // Optional override. Restrict to two visible characters for tidy tiles.
+      if (typeof link.initials === 'string' && link.initials.trim()) {
+        return Array.from(link.initials.trim().toLocaleUpperCase()).slice(0, 2).join('');
+      }
+      const source = String(link.title || (siteUrl && siteUrl.hostname) || '?');
+      const words = source.match(/[\p{L}\p{N}]+/gu) || [];
+      const meaningful = words.filter(word => !['a', 'an', 'and', 'the', 'to', 'of'].includes(word.toLowerCase()));
+      const chosen = meaningful.length ? meaningful : words;
+      if (!chosen.length) return '?';
+      if (chosen.length > 1) return (chosen[0][0] + chosen[1][0]).toLocaleUpperCase();
+      return Array.from(chosen[0]).slice(0, 2).join('').toLocaleUpperCase();
+    }
+
+    function websiteBrandColor(link, siteUrl) {
+      // Same website gets the same color across refreshes/search results.
+      const identity = (siteUrl?.hostname || link.title || '').toLowerCase();
+      let hash = 0;
+      for (const char of identity) hash = (Math.imul(hash, 31) + char.charCodeAt(0)) | 0;
+      return WEBSITE_BRAND_COLORS[(hash >>> 0) % WEBSITE_BRAND_COLORS.length];
+    }
+
+    function websiteLogoUrl(value) {
+      if (typeof value !== 'string' || !value.trim()) return null;
+      try {
+        // Accept HTTPS/HTTP logo URLs OR paths relative to this index.html.
+        const url = new URL(value.trim(), document.baseURI);
+        return ['https:', 'http:'].includes(url.protocol) ? url.href : null;
+      } catch { return null; }
+    }
+
+    function makeWebsiteBrand(link, siteUrl) {
       const frame = document.createElement('div');
-      frame.className = 'link-favicon';
+      frame.className = 'link-brand';
+      const [top, bottom, border] = websiteBrandColor(link, siteUrl);
+      frame.style.setProperty('--brand-top', top);
+      frame.style.setProperty('--brand-bottom', bottom);
+      frame.style.setProperty('--brand-border', border);
 
-      // Visible immediately, and stays visible when an icon cannot load.
-      const fallback = document.createElement('span');
-      fallback.className = 'favicon-fallback';
-      fallback.textContent = '🔗';
-      fallback.setAttribute('aria-hidden', 'true');
-      frame.append(fallback);
+      const initials = document.createElement('span');
+      initials.className = 'brand-initials';
+      initials.textContent = websiteInitials(link, siteUrl);
+      initials.setAttribute('aria-hidden', 'true'); // The title gives the full name.
+      frame.append(initials);
 
-      if (!siteUrl) return frame;
+      // Real logos are opt-in only: avoids missing/broken third-party favicons.
+      const logoUrl = websiteLogoUrl(link.logo || link.favicon);
+      if (!logoUrl) return frame;
 
-      const automaticUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(siteUrl.hostname)}&sz=64`;
-      const customUrl = linkUrl(link.favicon || ''); // HTTP(S) overrides only.
-      const image = document.createElement('img');
-      image.alt = ''; // The website title already identifies the card.
-      image.loading = 'lazy';
-      image.decoding = 'async';
-      image.referrerPolicy = 'no-referrer';
-      image.hidden = true;
+      const logo = document.createElement('img');
+      logo.alt = ''; // Decorative. The card heading names the website.
+      logo.loading = 'lazy';
+      logo.decoding = 'async';
+      logo.referrerPolicy = 'no-referrer';
+      logo.hidden = true;
 
-      // Never leave the card displaying a broken <img> icon.
-      image.addEventListener('load', () => {
-        image.hidden = false;
-        fallback.hidden = true;
+      // Override only accepts a simple hex CSS color (optional).
+      const background = link.logoBackground;
+      if (typeof background === 'string' && /^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(background)) {
+        frame.style.setProperty('--logo-bg', background);
+      }
+
+      logo.addEventListener('load', () => {
+        logo.hidden = false;
+        initials.hidden = true;
       });
-      image.addEventListener('error', () => {
-        if (customUrl && image.src !== automaticUrl) {
-          image.src = automaticUrl; // Retry with the automatic favicon.
-        } else {
-          image.hidden = true;
-          fallback.hidden = false;
-        }
+      logo.addEventListener('error', () => {
+        logo.hidden = true;
+        initials.hidden = false;
       });
-
-      frame.append(image);
-      image.src = customUrl ? customUrl.href : automaticUrl;
+      frame.append(logo);
+      logo.src = logoUrl;
       return frame;
     }
 
@@ -1651,10 +1719,10 @@
       article.className = 'tile link-tile';
       const url = linkUrl(link.url);
 
-      // Website identity: favicon, name, and the real domain together.
+      // Website identity: colored initials, or an optional custom logo.
       const head = document.createElement('div');
       head.className = 'link-head';
-      const favicon = makeWebsiteFavicon(link, url);
+      const brand = makeWebsiteBrand(link, url);
       const headCopy = document.createElement('div');
       headCopy.className = 'link-head-copy';
       const title = document.createElement('h3');
@@ -1663,7 +1731,7 @@
       domain.className = 'link-domain';
       domain.textContent = url ? url.hostname.replace(/^www\./, '') : 'Invalid website URL';
       headCopy.append(title, domain);
-      head.append(favicon, headCopy);
+      head.append(brand, headCopy);
 
       const description = document.createElement('p');
       description.className = 'link-description';
