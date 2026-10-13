@@ -20,7 +20,7 @@
 <main class="viewport"><div class="viewbar"><span class="micro">3D WORKSPACE</span><span class="muted" id="toolname" style="margin-left:12px">Brush · paint faces within radius</span><span class="spacer"></span><button class="iconbtn" id="wire" title="Wireframe">▦</button><button class="iconbtn" id="grid" title="Toggle grid">#</button><button class="iconbtn" id="projection" title="Toggle perspective / orthographic">◇</button><button class="iconbtn" id="resetview" title="Reset view">⌗</button></div>
 <div class="viewarea" id="view"><canvas id="canvas"></canvas><div class="hint" id="hint">Left drag: paint · Right drag: rotate · Wheel: zoom<br>Middle drag: pan · Hold Alt: orbit</div><div class="empty" id="empty"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"><path d="M50 8 88 29v43L50 93 12 72V29Z M12 29l38 23 38-23 M50 52v41"/><path d="M30 39 70 17 M29 82 69 60" opacity=".5"/></svg><h2>Your canvas is ready</h2><p>Import a 3MF or STL, or create a sample model</p><button class="btn primary" id="sample" style="pointer-events:auto;margin-top:8px">Create sample model</button></div><div class="drop">Drop a 3MF / STL file to start</div></div>
 <div class="bottom"><div style="display:flex;align-items:center;justify-content:space-between"><span class="micro">FILAMENT PALETTE</span><div><button class="smallbtn" id="paletteSave">Save palette</button> <button class="smallbtn" id="paletteLoad">Load palette</button></div></div><div class="palette" id="palette"></div><div class="botrow"><span id="paletteLabel">Color 1</span><span id="colorHex">#F3F5F9</span><span class="grow"></span><span>Colors can be edited in the inspector →</span></div></div></main>
-<aside class="sidebar"><section class="section"><div class="secttitle">Paint Properties <span>◉</span></div><div class="row"><span class="muted">Active color</span><div class="colordetail"><input class="colorpicker" type="color" id="colorPicker" value="#f3f5f9"><span class="value" id="activeHex">#F3F5F9</span></div></div><div class="row"><span class="muted">Brush diameter</span><span class="value" id="brushVal">5.0 mm</span></div><input class="range" id="brushSize" type="range" min="0.3" max="40" step="0.1" value="5"><div class="row"><span class="muted">Smart angle limit</span><span class="value" id="angleVal">35°</span></div><input class="range" id="angleSize" type="range" min="0" max="180" step="1" value="35"><div class="row"><span class="muted">Selection mode</span></div><div class="seg"><button id="selVisible" class="sel">Visible</button><button id="selThrough">Through</button></div><div class="row"><span class="muted">Painting</span><span id="paintMode" class="value">Per triangle</span></div><div class="selectrow"><button class="smallbtn" id="paintAll">Paint object</button><button class="smallbtn" id="resetColor">Clear object</button></div></section>
+<aside class="sidebar"><section class="section"><div class="secttitle">Paint Properties <span>◉</span></div><div class="row"><span class="muted">Active color</span><div class="colordetail"><input class="colorpicker" type="color" id="colorPicker" value="#f3f5f9"><span class="value" id="activeHex">#F3F5F9</span></div></div><div class="row"><span class="muted">Brush diameter</span><span class="value" id="brushVal">5.0 mm</span></div><input class="range" id="brushSize" type="range" min="0.3" max="40" step="0.1" value="5"><div class="row"><span class="muted">Fill diameter</span><span class="value" id="fillVal">40 mm</span></div><input class="range" id="fillSize" type="range" min="2" max="250" step="1" value="40"><div class="row"><span class="muted">Surface angle limit</span><span class="value" id="angleVal">35°</span></div><input class="range" id="angleSize" type="range" min="0" max="180" step="1" value="35"><div class="row"><span class="muted">Selection mode</span></div><div class="seg"><button id="selVisible" class="sel">Visible</button><button id="selThrough">Through</button></div><div class="row"><span class="muted">Painting</span><span id="paintMode" class="value">Per triangle</span></div><div class="selectrow"><button class="smallbtn" id="paintAll">Paint object</button><button class="smallbtn" id="resetColor">Clear object</button></div></section>
 <section class="section"><div class="secttitle">Objects <span id="objNum">0</span></div><div id="objects"><p class="muted">No model loaded</p></div><div class="row"><button class="smallbtn" id="showAll">Show all</button><button class="smallbtn" id="center">Frame selection</button></div></section>
 <section class="section"><div class="secttitle">Model Information</div><div class="row"><span class="muted">Triangles</span><span class="value" id="triangles">—</span></div><div class="row"><span class="muted">Objects</span><span class="value" id="objectCount">—</span></div><div class="row"><span class="muted">Dimensions</span><span class="value" id="dimensions">—</span></div><div class="row"><span class="muted">Units</span><span class="value">mm</span></div><div class="row"><span class="muted">Colors in use</span><span class="value" id="usedColors">—</span></div></section>
 <section class="section"><div class="secttitle">Export & workflow</div><p class="muted" style="line-height:1.65">3MF export writes per-face color groups. Slicer-specific paint annotations and unsupported source metadata are not preserved.</p><button class="btn" style="width:100%" id="downloadStl">Export geometry · STL</button><div style="height:9px"></div><button class="btn" style="width:100%" id="save2">Save editable project</button></section></aside></div>
@@ -38,10 +38,10 @@ const controls=new OrbitControls(camera,ui.canvas);controls.enableDamping=true;c
 scene.add(new THREE.HemisphereLight(0xf2f5ff,0x475064,2.25));const keyLight=new THREE.DirectionalLight(0xffffff,2.2);keyLight.position.set(75,-100,170);scene.add(keyLight);const fillLight=new THREE.DirectionalLight(0xaec9ff,.8);fillLight.position.set(-90,60,100);scene.add(fillLight);
 let grid=new THREE.GridHelper(300,30,0x3d506b,0x273243);grid.rotation.x=Math.PI/2;scene.add(grid);
 const root=new THREE.Group();scene.add(root);const raycaster=new THREE.Raycaster();const mouse=new THREE.Vector2();
-let source3mf=null, sourceBambu=false, originalBambuPalette=null, meshes=[],active=null,tool='brush',palette=['#e8ebf2','#ec6274','#f3ba57','#66c49c','#64a7ee','#b190f4','#1f2733','#ffffff'],colorIndex=1,size=5,angle=35,through=false,wire=false,ortho=false,dragging=false,stroke=null,rectStart=null,rectOverlay=null,projectName='Untitled',dirty=false,undoStack=[],redoStack=[],suspendPaint=false;
+let source3mf=null, sourceBambu=false, originalBambuPalette=null, meshes=[],active=null,tool='brush',palette=['#e8ebf2','#ec6274','#f3ba57','#66c49c','#64a7ee','#b190f4','#1f2733','#ffffff'],colorIndex=1,size=5,fillSize=40,angle=35,through=false,wire=false,ortho=false,dragging=false,stroke=null,rectStart=null,rectOverlay=null,projectName='Untitled',dirty=false,undoStack=[],redoStack=[],suspendPaint=false;
 const iconPaths={brush:'M12 19l7-7 3 3-7 7-4 1 1-4ZM13 6l5 5 M16 3l5 5 M3 16c2-1 5 0 5 3s-3 4-6 3c2-1 2-3 1-6Z',fine:'M13 4l7 7-10 10H3v-7L13 4ZM11 7l7 7',fill:'m4 12 8-8 8 8-8 8-8-8ZM4 12h16M21 17c0 3 3 3 3 0',magic:'m3 21 12-12 M9 3l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3ZM19 2l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2Z',rectangle:'M4 4h5m6 0h5v5m0 6v5h-5m-6 0H4v-5M4 9V4',eraser:'m3 15 9-11 9 8-8 9H8l-5-6ZM9 21h12',sample:'M3 21l6-6 3 3-6 3H3ZM10 14l9-9 2 2-9 9-2-2ZM16 5l3-3 3 3',undo:'M9 14 4 9l5-5M4 9h9c6 0 7 9 1 11',redo:'m15 14 5-5-5-5m5 5h-9c-6 0-7 9-1 11',focus:'M9 3H4v5m11-5h5v5m0 7v5h-5M4 15v5h5M12 8v8m-4-4h8'};
 for(const el of document.querySelectorAll('[data-icon]')){let p=iconPaths[el.dataset.icon];el.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="${p}"/></svg>`}
-const tools={brush:'Brush · paint faces within radius',fine:'Detail brush · paint a single triangle',fill:'Fill · all connected faces',angle:'Smart fill · connected faces within angle',rectangle:'Region · drag a screen-space rectangle',erase:'Eraser · restore default color',sample:'Sample · pick the face color'};
+const tools={brush:'Brush · paint faces within radius',fine:'Detail brush · paint a single triangle',fill:'Surface fill · bounded by size and angle',angle:'Smart fill · bounded region with angle and size',rectangle:'Region · drag a screen-space rectangle',erase:'Eraser · restore default color',sample:'Sample · pick the face color'};
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>e.classList.remove('show'),3500)}
 function status(t){$('status').textContent=t}
 function setDirty(b=true){dirty=b;$('filename').textContent=projectName+(b?'  ●':'')}
@@ -57,7 +57,7 @@ function endStroke(){if(stroke?.size){undoStack.push([...stroke.values()]);if(un
 function historyStep(from,to,undo){endStroke();const changes=from.pop();if(!changes)return;for(const a of changes){const c=undo?a.before:a.after;a.m.userData.faceColors[a.i]=c;if(a.m.userData.bambuEdits){if(c===a.before&&undo)a.m.userData.bambuEdits.delete(a.i);else a.m.userData.bambuEdits.set(a.i,c)}paintVertexColor(a.m.geometry.attributes.color,a.i,c);a.m.geometry.attributes.color.needsUpdate=true}to.push(changes);setDirty();updateStats()}
 $('undo').onclick=()=>historyStep(undoStack,redoStack,true);$('redo').onclick=()=>historyStep(redoStack,undoStack,false);
 function setTool(t){hidePreview();tool=t;document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t));$('toolname').textContent=tools[t];$('hint').innerHTML=t==='rectangle'?'Left drag: select region · Right drag: orbit<br>Middle drag: pan · Hold Alt: orbit':'Left drag: paint · Right drag: rotate · Wheel: zoom<br>Middle drag: pan · Hold Alt: orbit'}
-document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));$('brushSize').oninput=e=>{size=+e.target.value;hidePreview();$('brushVal').textContent=size.toFixed(1)+' mm'};$('angleSize').oninput=e=>{angle=+e.target.value;hidePreview();$('angleVal').textContent=angle+'°'};$('selVisible').onclick=()=>{through=false;$('selVisible').classList.add('sel');$('selThrough').classList.remove('sel')};$('selThrough').onclick=()=>{through=true;$('selThrough').classList.add('sel');$('selVisible').classList.remove('sel')};
+document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));$('brushSize').oninput=e=>{size=+e.target.value;hidePreview();$('brushVal').textContent=size.toFixed(1)+' mm'};$('angleSize').oninput=e=>{angle=+e.target.value;hidePreview();$('angleVal').textContent=angle+'°'};$('fillSize').oninput=e=>{fillSize=+e.target.value;hidePreview();$('fillVal').textContent=fillSize+' mm'};$('selVisible').onclick=()=>{through=false;$('selVisible').classList.add('sel');$('selThrough').classList.remove('sel')};$('selThrough').onclick=()=>{through=true;$('selThrough').classList.add('sel');$('selVisible').classList.remove('sel')};
 function coords(e){const r=ui.canvas.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top,nx:(e.clientX-r.left)/r.width*2-1,ny:-(e.clientY-r.top)/r.height*2+1}}
 function hit(e){const p=coords(e);mouse.set(p.nx,p.ny);raycaster.setFromCamera(mouse,camera);const found=raycaster.intersectObjects(meshes.filter(m=>m.visible),false);if(!found.length)return null;const x=found[0];return {m:x.object,i:x.faceIndex,point:x.point}}
 function faceCentroid(m,i){const p=m.geometry.attributes.position;const v=new THREE.Vector3();for(let k=0;k<3;k++)v.add(new THREE.Vector3().fromBufferAttribute(p,i*3+k));v.multiplyScalar(1/3);return m.localToWorld(v)}
@@ -68,15 +68,31 @@ function selectedFaces(h,t=tool){
  const {m,i:index,point}=h;
  if(t==='fine'||t==='sample')return [index];
  if(t==='fill'||t==='angle'){
-  const adj=neighbors(m),nn=t==='angle'?normals(m):null;
+  // Both fills are surface-constrained. Compare against the SEED face normal
+  // to stop slowly curving surfaces from leaking across the entire model.
+  const adj=neighbors(m),nn=normals(m),seed=nn[index];
   const visited=new Uint8Array(adj.length),queue=[index];visited[index]=1;
   const limit=Math.cos(angle*Math.PI/180);
+  const p=m.geometry.attributes.position;
+  const origin=m.worldToLocal(point.clone());
+  const scale=m.getWorldScale(new THREE.Vector3());
+  const maxRadius2=(fillSize/2)**2;
+  const sameColor=t==='fill',startColor=m.userData.faceColors[index];
   for(let head=0;head<queue.length;head++){
    const i=queue[head];
-   if(queue.length>=adj.length)break;
    for(const j of adj[i]){
-    if(visited[j]||(nn&&nn[i].dot(nn[j])<limit))continue;
-    visited[j]=1;queue.push(j);
+    if(visited[j])continue;
+    visited[j]=1;
+    if(seed.dot(nn[j])<limit)continue;
+    if(sameColor&&m.userData.faceColors[j]!==startColor)continue;
+    const k=j*3;
+    const x=((p.getX(k)+p.getX(k+1)+p.getX(k+2))/3-origin.x)*scale.x;
+    if(x*x>maxRadius2)continue;
+    const y=((p.getY(k)+p.getY(k+1)+p.getY(k+2))/3-origin.y)*scale.y;
+    if(x*x+y*y>maxRadius2)continue;
+    const z=((p.getZ(k)+p.getZ(k+1)+p.getZ(k+2))/3-origin.z)*scale.z;
+    if(x*x+y*y+z*z>maxRadius2)continue;
+    queue.push(j);
    }
   }
   return queue;
@@ -109,18 +125,18 @@ function presentPreview(h,faces,e){
  const indices=new Uint32Array(faces.length*3);for(let k=0;k<faces.length;k++){const i=faces[k]*3;indices.set([i,i+1,i+2],k*3)}
  geom.setIndex(new THREE.BufferAttribute(indices,1));hoverPreview.geometry.dispose();hoverPreview.geometry=geom;
  hoverPreview.visible=faces.length>0;
- const label=tool==='brush'||tool==='erase'?`${size.toFixed(1)} mm · ${faces.length.toLocaleString()} faces`:tool==='angle'?`Smart fill ${angle}° · ${faces.length.toLocaleString()} faces`:`${faces.length.toLocaleString()} face${faces.length===1?'':'s'}`;
+ const label=tool==='brush'||tool==='erase'?`${size.toFixed(1)} mm · ${faces.length.toLocaleString()} faces`:(tool==='angle'||tool==='fill')?`${fillSize} mm · ${angle}° · ${faces.length.toLocaleString()} faces`:`${faces.length.toLocaleString()} face${faces.length===1?'':'s'}`;
  const c=coords(e);previewCaption.textContent=label;previewCaption.style.left=Math.min(c.x+18,ui.view.clientWidth-180)+'px';previewCaption.style.top=Math.max(5,c.y-30)+'px';previewCaption.style.display='block';
 }
 function updateHover(e){
  if(dragging||!meshes.length||tool==='rectangle'||e.altKey||e.buttons===2){hidePreview();return}
  const h=hit(e);if(!h){hidePreview();return}
  const token=++hoverToken;const snapshot={clientX:e.clientX,clientY:e.clientY};
- if(hovered&&hovered.m===h.m&&hovered.i===h.i&&hovered.tool===tool&&hovered.angle===angle&&hovered.size===size){const c=coords(snapshot);previewCaption.style.left=Math.min(c.x+18,ui.view.clientWidth-180)+'px';previewCaption.style.top=Math.max(5,c.y-30)+'px';return}
+ if(hovered&&hovered.m===h.m&&hovered.i===h.i&&hovered.tool===tool&&hovered.angle===angle&&hovered.size===size&&hovered.fillSize===fillSize){const c=coords(snapshot);previewCaption.style.left=Math.min(c.x+18,ui.view.clientWidth-180)+'px';previewCaption.style.top=Math.max(5,c.y-30)+'px';return}
  // Yield before expensive selection work so rapid pointer motion can invalidate stale requests.
  setTimeout(()=>{if(token!==hoverToken||dragging)return;
   const faces=selectedFaces(h);if(token!==hoverToken)return;
-  hovered={m:h.m,i:h.i,faces,tool,angle,size};presentPreview(h,faces,snapshot);
+  hovered={m:h.m,i:h.i,faces,tool,angle,size,fillSize};presentPreview(h,faces,snapshot);
  },0);
 }
 function applyHit(e){
@@ -129,7 +145,7 @@ function applyHit(e){
   const c=h.m.userData.faceColors[h.i];let i=palette.indexOf(c);
   if(i<0){palette.push(c);i=palette.length-1}colorIndex=i;paletteUI();return;
  }
- const reusable=hovered&&hovered.m===h.m&&hovered.i===h.i&&hovered.tool===tool&&hovered.angle===angle&&hovered.size===size;
+ const reusable=hovered&&hovered.m===h.m&&hovered.i===h.i&&hovered.tool===tool&&hovered.angle===angle&&hovered.size===size&&hovered.fillSize===fillSize;
  const faces=reusable?hovered.faces:selectedFaces(h);
  const c=tool==='erase'?palette[0]:palette[colorIndex];for(const i of faces)changeFace(h.m,i,c);
  if(tool==='fill'||tool==='angle')toast(`${faces.length.toLocaleString()} faces painted`);
